@@ -44,7 +44,7 @@ export default function LogisticsForm() {
         className="mb-12"
       >
         <h1 className="text-4xl md:text-6xl font-display font-bold mb-4 uppercase tracking-tighter">LOGISTICS <span className="text-blue-500 underline decoration-blue-500/20 underline-offset-8">REQUEST</span></h1>
-        <p className="text-zinc-500 text-lg">최첨단 물류 인프라를 통한 최적의 경로 제안. 지금 바로 신청하세요.</p>
+        <p className="text-zinc-300 text-xl font-medium">최첨단 물류 인프라를 통한 최적의 경로 제안. 지금 바로 신청하세요.</p>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">

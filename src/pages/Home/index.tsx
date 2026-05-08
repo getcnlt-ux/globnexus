@@ -244,9 +244,9 @@ export default function Home() {
               <span className="text-zinc-500 italic font-light">{t('home.titlePart2')}</span> <br />
               {t('home.titlePart3')} <span className="text-blue-500">{t('home.titlePart4')}</span>
             </h1>
-            <p className="max-w-lg text-[#f4f4fc] text-[16px] mb-[25px] h-[87.75px] font-light leading-relaxed">
-              {t('home.desc')}
-            </p>
+          <p className="max-w-lg text-white text-[17px] mb-[30px] font-medium leading-relaxed drop-shadow-sm">
+            {t('home.desc')}
+          </p>
             <div className="flex flex-wrap gap-4 md:gap-6">
               <Link to="/apply" className="bg-blue-600 hover:bg-blue-500 text-white px-8 md:px-10 py-4 md:py-5 rounded-full font-bold transition-all flex items-center gap-3 group shadow-[0_10px_30px_rgba(37,99,235,0.3)]">
                 {t('home.applyBtn')} <ArrowRight className="group-hover:translate-x-1 transition-transform" />
@@ -571,7 +571,7 @@ function StatusItem({ label, value, trend }: { label: string, value: string, tre
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-mono text-zinc-500 uppercase tracking-tight">{label}</p>
+        <p className="text-[10px] font-mono text-zinc-300 uppercase tracking-tight font-black">{label}</p>
         <span className={cn(
           "text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-sm",
           trend.startsWith('+') ? "text-green-400 bg-green-400/10" : "text-blue-400 bg-blue-400/10"
@@ -595,8 +595,8 @@ function FeatureCard({ icon, title, description }: { icon: ReactNode, title: str
           {icon}
         </div>
         <div>
-          <h3 className="text-xl font-bold mb-4">{title}</h3>
-          <p className="text-zinc-500 leading-relaxed break-keep">{description}</p>
+          <h3 className="text-2xl font-bold mb-4 text-white uppercase tracking-tight">{title}</h3>
+          <p className="text-zinc-300 text-base leading-relaxed break-keep font-medium">{description}</p>
         </div>
       </motion.div>
     </Link>

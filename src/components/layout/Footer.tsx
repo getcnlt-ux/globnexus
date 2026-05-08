@@ -12,24 +12,24 @@ export default function Footer() {
             <Plane className="w-6 h-6 text-blue-500" />
             <span className="font-display font-bold text-lg uppercase">Globridge</span>
           </Link>
-          <p className="text-zinc-500 text-sm leading-relaxed">
+          <p className="text-zinc-400 text-sm leading-relaxed">
             {t('footer.desc')}
           </p>
         </div>
 
         <div>
           <h4 className="font-display font-semibold mb-6 uppercase text-sm tracking-widest text-zinc-400">{t('footer.services')}</h4>
-          <ul className="space-y-4 text-sm text-zinc-500 font-medium font-sans italic">
-            <li><Link to="/services" className="hover:text-blue-500">{t('nav.services')}</Link></li>
-            <li><Link to="/services" className="hover:text-blue-500">{t('footer.sourcing')}</Link></li>
-            <li><Link to="/services" className="hover:text-blue-500">{t('footer.certification')}</Link></li>
-            <li><Link to="/services" className="hover:text-blue-500">{t('footer.b2b')}</Link></li>
+          <ul className="space-y-4 text-sm text-zinc-300 font-medium font-sans">
+            <li><Link to="/services" className="hover:text-blue-500 transition-colors uppercase tracking-tight">{t('nav.services')}</Link></li>
+            <li><Link to="/services" className="hover:text-blue-500 transition-colors uppercase tracking-tight">{t('footer.sourcing')}</Link></li>
+            <li><Link to="/services" className="hover:text-blue-500 transition-colors uppercase tracking-tight">{t('footer.certification')}</Link></li>
+            <li><Link to="/services" className="hover:text-blue-500 transition-colors uppercase tracking-tight">{t('footer.b2b')}</Link></li>
           </ul>
         </div>
 
         <div>
           <h4 className="font-display font-semibold mb-6 uppercase text-sm tracking-widest text-zinc-400">{t('footer.links')}</h4>
-          <ul className="space-y-4 text-sm text-zinc-500">
+          <ul className="space-y-4 text-base text-zinc-300">
             <li><Link to="/about" className="hover:text-blue-500 transition-colors">{t('nav.about')}</Link></li>
             <li><Link to="/contact" className="hover:text-blue-500 transition-colors">{t('footer.inquiry')}</Link></li>
             <li><Link to="/faq" className="hover:text-blue-500 transition-colors">{t('nav.faq')}</Link></li>
@@ -39,10 +39,10 @@ export default function Footer() {
 
         <div>
           <h4 className="font-display font-semibold mb-6 uppercase text-sm tracking-widest text-zinc-400">{t('footer.contact')}</h4>
-          <ul className="space-y-4 text-sm text-zinc-500">
-            <li className="flex items-center gap-3"><Mail className="w-4 h-4" /> contact@globlogix.com</li>
-            <li className="flex items-center gap-3"><Phone className="w-4 h-4" /> +82 (0)10-0000-0000</li>
-            <li className="flex items-center gap-3"><MapPin className="w-4 h-4" /> {t('footer.address')}</li>
+          <ul className="space-y-4 text-base text-zinc-300">
+            <li className="flex items-center gap-3"><Mail className="w-4 h-4 text-blue-500" /> contact@globlogix.com</li>
+            <li className="flex items-center gap-3"><Phone className="w-4 h-4 text-blue-500" /> +82 (0)10-0000-0000</li>
+            <li className="flex items-center gap-3"><MapPin className="w-4 h-4 text-blue-500" /> {t('footer.address')}</li>
           </ul>
         </div>
       </div>

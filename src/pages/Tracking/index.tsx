@@ -310,15 +310,15 @@ export default function TrackingPage() {
 
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center border-t border-white/5 pt-8">
                 <div>
-                  <p className="text-[10px] text-zinc-500 uppercase font-mono mb-1">{t('agent.tracking.currentStep')}</p>
+                  <p className="text-[11px] text-zinc-300 uppercase font-bold font-mono mb-1">{t('agent.tracking.currentStep')}</p>
                   <p className="font-bold text-white uppercase">{t(`agent.tracking.statusLabels.${result.currentStep}`)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-zinc-500 uppercase font-mono mb-1">Tracking Number</p>
+                  <p className="text-[11px] text-zinc-300 uppercase font-bold font-mono mb-1">Tracking Number</p>
                   <p className="font-bold text-white font-mono">{result.number}</p>
                 </div>
                 <div className="col-span-2">
-                  <p className="text-[10px] text-zinc-500 uppercase font-mono mb-1">{t('agent.tracking.lastUpdate')}</p>
+                  <p className="text-[11px] text-zinc-300 uppercase font-bold font-mono mb-1">{t('agent.tracking.lastUpdate')}</p>
                   <p className="font-bold text-white">{result.lastUpdate}</p>
                 </div>
               </div>
@@ -350,7 +350,7 @@ export default function TrackingPage() {
                           </p>
                           <span className="text-[10px] font-mono text-zinc-500">{event.time}</span>
                         </div>
-                        <p className="text-zinc-500 text-sm mb-1">{event.desc}</p>
+                        <p className="text-zinc-300 text-base mb-1 font-medium">{event.desc}</p>
                         <div className="flex items-center gap-1 text-[10px] text-blue-500/70 font-mono">
                           <MapPin size={10} />
                           {event.location}

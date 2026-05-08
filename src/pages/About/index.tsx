@@ -96,7 +96,7 @@ export default function About() {
                   </div>
                   <div>
                     <h4 className="font-bold text-xl mb-2">{t('about.strength1Title')}</h4>
-                    <p className="text-base text-zinc-500 leading-relaxed font-light">{t('about.strength1Desc')}</p>
+                    <p className="text-base text-zinc-300 leading-relaxed font-light">{t('about.strength1Desc')}</p>
                   </div>
                </div>
                <div className="space-y-5">
@@ -105,7 +105,7 @@ export default function About() {
                   </div>
                   <div>
                     <h4 className="font-bold text-xl mb-2">{t('about.strength2Title')}</h4>
-                    <p className="text-[17px] text-zinc-500 leading-relaxed font-light">{t('about.strength2Desc')}</p>
+                    <p className="text-[17px] text-zinc-300 leading-relaxed font-light">{t('about.strength2Desc')}</p>
                   </div>
                </div>
             </div>
@@ -279,7 +279,7 @@ function StrengthCard({ icon, title, desc, index }: { icon: React.ReactNode, tit
       </div>
       <div>
         <h3 className="text-2xl font-bold mb-4 tracking-tight group-hover:text-blue-400 transition-colors">{title}</h3>
-        <p className="text-zinc-500 text-sm leading-relaxed font-light">{desc}</p>
+        <p className="text-zinc-200 text-base leading-relaxed font-medium">{desc}</p>
       </div>
       
       <div className="mt-auto pt-4 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">

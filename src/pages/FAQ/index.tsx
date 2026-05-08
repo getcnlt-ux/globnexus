@@ -46,7 +46,7 @@ function FAQItem({ question, answer }: FAQItemProps) {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="p-6 pt-0 text-zinc-400 font-light leading-relaxed">
+            <div className="p-6 pt-0 text-zinc-300 font-light leading-relaxed">
               {answer}
             </div>
           </motion.div>

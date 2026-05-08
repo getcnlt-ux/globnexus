@@ -45,7 +45,7 @@ export default function PurchaseForm() {
       >
         <span className="text-blue-500 font-mono text-xs font-bold uppercase tracking-[0.3em] mb-4 block">Global Sourcing Service</span>
         <h1 className="text-4xl md:text-6xl font-display font-bold mb-4 uppercase tracking-tighter">PURCHASE <span className="text-blue-500">PROXY</span></h1>
-        <p className="text-zinc-500 text-lg">중국, 일본, 미·유럽 현지 소싱부터 제품 개발, 검수까지 한 번에 연결되는 통합 서비스를 제공합니다.</p>
+        <p className="text-zinc-300 text-xl font-medium">중국, 일본, 미·유럽 현지 소싱부터 제품 개발, 검수까지 한 번에 연결되는 통합 서비스를 제공합니다.</p>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">

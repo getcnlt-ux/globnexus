@@ -59,8 +59,8 @@ export default function Services() {
               <div className="text-blue-500 mb-8 p-4 bg-blue-500/5 rounded-2xl w-fit group-hover:bg-blue-500 group-hover:text-white transition-colors">
                 {service.icon}
               </div>
-              <h3 className="text-2xl font-bold mb-4">{service.title}</h3>
-              <p className="text-zinc-500 font-light leading-relaxed">{service.description}</p>
+              <h3 className="text-2xl font-bold mb-4 text-white uppercase tracking-tight">{service.title}</h3>
+              <p className="text-zinc-300 text-lg leading-relaxed font-medium">{service.description}</p>
             </motion.div>
           </Link>
         ))}
