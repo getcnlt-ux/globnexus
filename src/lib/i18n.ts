@@ -212,6 +212,13 @@ const resources = {
           cn_cert: '중국 인증대행',
           mfg: '제조 / 개발'
         },
+        service: {
+          logistics: { desc: '가장 빠르고 경제적인 글로벌 운송 솔루션을 제안합니다.' },
+          buying: { desc: '원하는 제품의 소싱부터 단가 협상, 현지 검수까지 대행합니다.' },
+          kr_cert: { desc: '전기용품, 어린이제품 등 한국 내 필수 인증 획득을 지원합니다.' },
+          cn_cert: { desc: '중국 현지 수출에 필요한 CCC 등 주요 인증을 대행합니다.' },
+          mfg: { desc: '아이디어 구상부터 시제품 제작, OEM 생산 공장을 연결합니다.' }
+        },
         fields: {
           name: '이름 / 업체명',
           phone: '연락처',
@@ -523,6 +530,13 @@ const resources = {
           kr_cert: 'Korea Cert',
           cn_cert: 'China Cert',
           mfg: 'Manufacturing'
+        },
+        service: {
+          logistics: { desc: 'Proposing the fastest and most economical global shipping solutions.' },
+          buying: { desc: 'From sourcing products to price negotiation and local inspection.' },
+          kr_cert: { desc: 'Support for obtaining essential certifications in Korea.' },
+          cn_cert: { desc: 'Handling major certifications like CCC needed for China export.' },
+          mfg: { desc: 'Connecting from idea to prototyping and OEM production factories.' }
         },
         fields: {
           name: 'Name / Company',
@@ -836,6 +850,13 @@ const resources = {
           cn_cert: '中国认证',
           mfg: '制造与开发'
         },
+        service: {
+          logistics: { desc: '提供最快、最经济的全球运输解决方案。' },
+          buying: { desc: '从产品采购到价格谈判和当地检查的全流程代办。' },
+          kr_cert: { desc: '支持在韩国获得必要的认证。' },
+          cn_cert: { desc: '办理中国出口所需的CCC等主要认证。' },
+          mfg: { desc: '连接从创意到原型制作和OEM生产工厂的所有环节。' }
+        },
         fields: {
           name: '姓名 / 公司名',
           phone: '联系电话',
@@ -1097,6 +1118,13 @@ const resources = {
           kr_cert: '韓国認証',
           cn_cert: '中国認証',
           mfg: '製造・開発'
+        },
+        service: {
+          logistics: { desc: '最速で経済적인グローバル輸送ソリューションを提案します。' },
+          buying: { desc: '製品のソーシングから価格交渉、現地検品まで代行します。' },
+          kr_cert: { desc: '韓国国内での必須認証取得をサポートします。' },
+          cn_cert: { desc: '中国輸出に必要なCCCなど主要認証を代行します。' },
+          mfg: { desc: 'アイデアから試作、OEM生産工場までを繋ぎます。' }
         },
         fields: {
           name: '名前 / 業者名',
