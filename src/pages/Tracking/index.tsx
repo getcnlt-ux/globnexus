@@ -66,7 +66,7 @@ const STEPS = [
 ];
 
 export default function TrackingPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { profile } = useAuth();
   const [trackingNumber, setTrackingNumber] = useState('');
   const [result, setResult] = useState<any>(null);
@@ -142,19 +142,38 @@ export default function TrackingPage() {
           lastUpdate: updatedAt,
           events: events
         });
-      } else if (num.startsWith('DEMO-')) {
+      } else if (num.startsWith('DEMO-') || num === '12345678' || num === 'GN-2024-001' || num === 'GN-2024-005') {
         // DEMO MOCK DATA FALLBACK
-        const isComplete = num.includes('COMPLETE');
-        const demoStatus = isComplete ? 'delivered' : 'shipping';
+        let demoStatus = 'shipping';
+        let demoLocation = 'Region Distribution Center';
+        let customDesc = '';
+
+        if (num === 'GN-2024-001') {
+          demoStatus = 'import';
+          demoLocation = '인천항 (Incheon Port)';
+          customDesc = i18n.language === 'ko' ? '인천항 통관 진행 중' : 'Customs clearance at Incheon Port';
+        } else if (num === 'GN-2024-005') {
+          demoStatus = 'warehouse';
+          demoLocation = '중국 웨이하이 창고 (Weihai, China)';
+          customDesc = i18n.language === 'ko' ? '중국 웨이하이 창고 입고 완료' : 'Stored in Weihai, China Warehouse';
+        } else if (num === '12345678' || num.includes('COMPLETE')) {
+          demoStatus = 'delivered';
+          demoLocation = i18n.language === 'ko' ? '배송지 도착' : 'Destination Reached';
+          customDesc = i18n.language === 'ko' ? '고객님께 배송이 완료되었습니다.' : 'Delivery has been completed.';
+        }
+
         const demoTime = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
         
         const currentIdx = STEPS.findIndex(s => s.id === demoStatus);
-        const events = STEPS.slice(0, currentIdx + 1).reverse().map((step, i) => ({
-          time: format(new Date(Date.now() - (i * 2) * 86400000), 'yyyy-MM-dd HH:mm:ss'),
-          location: i === 0 && !isComplete ? '국제 터미널 (International Terminal)' : 'Region Distribution Center',
-          status: step.id,
-          desc: `[DEMO] ${t(`agent.tracking.statusLabels.${step.id}`)}`
-        }));
+        const events = STEPS.slice(0, currentIdx + 1).reverse().map((step, i) => {
+          const isLatest = i === 0;
+          return {
+            time: format(new Date(Date.now() - (i * 2) * 86400000), 'yyyy-MM-dd HH:mm:ss'),
+            location: isLatest ? demoLocation : 'System Hub',
+            status: step.id,
+            desc: isLatest && customDesc ? customDesc : `[TEST] ${t(`agent.tracking.statusLabels.${step.id}`)}`
+          };
+        });
 
         setResult({
           number: num,
