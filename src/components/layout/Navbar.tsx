@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu, X, Plane, Globe2, Settings, LogIn, LogOut, User, UserPlus, Link as LinkIcon, Check, Users } from 'lucide-react';
+import { Menu, X, Plane, Globe2, Settings, LogIn, LogOut, User, UserPlus, Link as LinkIcon, Check, Users, Sun, Moon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../common/AuthProvider';
+import { useTheme } from '../common/ThemeProvider';
 import AuthModal from '../common/AuthModal';
 import { auth } from '../../lib/firebase';
 import { signOut } from 'firebase/auth';
@@ -19,6 +20,7 @@ const languages = [
 export default function Navbar() {
   const { t, i18n } = useTranslation();
   const { profile } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
@@ -116,9 +118,9 @@ export default function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center gap-2 glass-panel px-3 py-1.5 rounded-full border border-white/10 hover:border-blue-500/50 transition-all"
+                className="flex items-center gap-2 glass-panel px-3 py-1.5 rounded-full border border-black/5 dark:border-white/10 hover:border-blue-500/50 transition-all font-sans"
               >
-                <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold">
+                <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold text-white shadow-lg shadow-blue-600/20">
                   {profile.displayName?.charAt(0) || profile.email?.charAt(0).toUpperCase()}
                 </div>
                 <span className="text-xs font-bold text-zinc-100 hidden lg:block">
@@ -132,15 +134,15 @@ export default function Navbar() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-full right-0 mt-2 w-64 glass-panel rounded-2xl overflow-hidden py-2 shadow-2xl border-white/10"
+                    className="absolute top-full right-0 mt-2 w-64 glass-panel rounded-2xl overflow-hidden py-2 shadow-2xl border-black/5 dark:border-white/10"
                   >
-                    <div className="px-4 py-3 border-b border-white/10 mb-2 bg-white/5">
+                    <div className="px-4 py-3 border-b border-black/5 dark:border-white/10 mb-2 bg-black/5 dark:bg-white/5">
                        <p className="text-[10px] text-zinc-500 uppercase font-mono tracking-widest mb-1">{t('nav.account')}</p>
-                       <p className="text-xs font-bold text-white truncate mb-3">{profile.email}</p>
+                       <p className="text-xs font-bold text-zinc-900 dark:text-white truncate mb-3">{profile.email}</p>
                        
                        <p className="text-[10px] text-zinc-500 uppercase font-mono tracking-widest mb-1 font-black">{t('nav.myReferral')}</p>
-                       <div className="flex items-center gap-2 bg-black/40 border border-white/5 p-1.5 rounded-lg">
-                         <span className="text-[9px] font-mono text-zinc-400 truncate flex-grow">{referralLink}</span>
+                       <div className="flex items-center gap-2 bg-zinc-100 dark:bg-black/40 border border-black/5 dark:border-white/5 p-1.5 rounded-lg">
+                         <span className="text-[9px] font-mono text-zinc-500 dark:text-zinc-400 truncate flex-grow">{referralLink}</span>
                          <button 
                             onClick={copyReferralLink}
                             className="text-blue-500 hover:text-blue-400 p-1"
@@ -202,6 +204,15 @@ export default function Navbar() {
             </div>
           )}
           
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-full glass-panel hover:border-blue-500/50 transition-colors text-blue-500"
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+
           <div className="relative">
             <button 
               onClick={() => setLangMenuOpen(!langMenuOpen)}
@@ -237,9 +248,18 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Toggle */}
-        <button className="md:hidden text-zinc-100" onClick={() => setIsOpen(!isOpen)}>
-          {isOpen ? <X /> : <Menu />}
-        </button>
+        <div className="md:hidden flex items-center gap-2">
+          <button
+            onClick={toggleTheme}
+            className="p-3 rounded-full glass-panel border-black/10 dark:border-white/10 text-blue-600 dark:text-blue-400 hover:scale-110 active:scale-95 transition-all shadow-sm"
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
+          <button className="text-zinc-900 dark:text-zinc-100 p-3 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors" onClick={() => setIsOpen(!isOpen)}>
+            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu */}
@@ -256,7 +276,10 @@ export default function Navbar() {
                 key={link.href}
                 to={link.href}
                 onClick={() => setIsOpen(false)}
-                className="text-lg font-medium"
+                className={cn(
+                  "text-lg font-bold uppercase tracking-tight",
+                  location.pathname === link.href ? "text-blue-500" : "text-zinc-900 dark:text-zinc-100"
+                )}
               >
                 {link.name}
               </Link>
@@ -277,7 +300,7 @@ export default function Navbar() {
                   <Link
                     to="/referrals"
                     onClick={() => setIsOpen(false)}
-                    className="w-full flex items-center justify-center gap-2 bg-white/5 border border-white/10 text-white py-3 rounded-xl text-sm font-bold mb-2"
+                    className="w-full flex items-center justify-center gap-2 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 text-zinc-900 dark:text-white py-3 rounded-xl text-sm font-bold mb-2 shadow-sm"
                   >
                     <Users className="w-4 h-4" />
                     {t('agent.dashboard')}
@@ -298,7 +321,7 @@ export default function Navbar() {
                       setAuthModalOpen(true);
                       setIsOpen(false);
                     }}
-                    className="w-full flex items-center justify-center gap-2 bg-white/5 border border-white/10 text-white py-3 rounded-xl text-sm font-bold"
+                    className="w-full flex items-center justify-center gap-2 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 text-zinc-900 dark:text-white py-3 rounded-xl text-sm font-bold shadow-sm"
                   >
                     <LogIn className="w-4 h-4" />
                     {t('nav.login')}

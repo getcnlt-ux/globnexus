@@ -124,19 +124,19 @@ export default function Apply() {
             <div className="flex flex-col items-center gap-2">
               <div className={cn(
                 "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors",
-                idx <= currentIndex ? "bg-blue-600 text-white" : "bg-zinc-800 text-zinc-500"
+                idx <= currentIndex ? "bg-blue-600 text-white" : "bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500"
               )}>
                 {idx < currentIndex ? <CheckCircle2 size={16} /> : idx + 1}
               </div>
               <span className={cn(
                 "text-[10px] font-mono uppercase tracking-tighter text-center",
-                idx <= currentIndex ? "text-blue-400" : "text-zinc-600"
+                idx <= currentIndex ? "text-blue-500 dark:text-blue-400" : "text-zinc-400 dark:text-zinc-600"
               )}>{s.label}</span>
             </div>
             {idx < steps.length - 1 && (
               <div className={cn(
                 "w-8 sm:w-12 h-[1px]",
-                idx < currentIndex ? "bg-blue-600" : "bg-zinc-800"
+                idx < currentIndex ? "bg-blue-600" : "bg-zinc-200 dark:bg-zinc-800"
               )} />
             )}
           </React.Fragment>
@@ -146,24 +146,24 @@ export default function Apply() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white pt-32 pb-20 px-6">
+    <div className="min-h-screen bg-zinc-50 dark:bg-black text-zinc-900 dark:text-white pt-32 pb-20 px-6 transition-colors duration-300">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <motion.h1 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-5xl font-display font-bold mb-4"
+            className="text-4xl md:text-5xl font-display font-bold mb-4 text-zinc-900 dark:text-white"
           >
             {step === 'success' ? t('apply_page.success_title') : t('apply_page.title')}
           </motion.h1>
-          <p className="text-zinc-500 font-light">
+          <p className="text-zinc-600 dark:text-zinc-500 font-light">
             {step === 'success' ? t('apply_page.success_subtitle') : t('apply_page.subtitle')}
           </p>
         </div>
 
         {step !== 'success' && renderProgress()}
 
-        <div className="glass-panel p-8 md:p-12 rounded-[2rem] border-white/5 relative overflow-hidden">
+        <div className="glass-panel p-8 md:p-12 rounded-[2rem] border-black/5 dark:border-white/5 relative overflow-hidden">
           <AnimatePresence mode="wait">
             {step === 'service' && (
               <ServiceSelection onSelect={handleServiceSelect} />

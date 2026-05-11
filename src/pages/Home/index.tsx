@@ -138,7 +138,7 @@ function RobotMascot() {
           <div className="absolute bottom-6 left-full ml-8 space-y-4 hidden md:block opacity-40">
              <div className="space-y-1">
                 <p className="text-xs font-mono font-black text-blue-500 uppercase tracking-widest">ACTIVE_CONTROL</p>
-                <p className="text-[11px] font-mono text-zinc-400 uppercase">GL_CORE_NODE_01</p>
+                <p className="text-[11px] font-mono text-zinc-600 dark:text-zinc-400 uppercase">GL_CORE_NODE_01</p>
              </div>
           </div>
         </motion.div>
@@ -239,19 +239,19 @@ export default function Home() {
             <span className="inline-block glass-panel px-4 py-1.5 rounded-full text-xs font-mono tracking-widest text-blue-400 mb-6 font-semibold uppercase">
               {t('home.subtitle')}
             </span>
-            <h1 className="text-5xl md:text-[95px] font-display font-extrabold leading-[0.85] mb-6 tracking-tighter">
+            <h1 className="text-5xl md:text-[95px] font-display font-extrabold leading-[0.85] mb-6 tracking-tighter text-zinc-900 dark:text-white">
               {t('home.titlePart1')} <br /> 
               <span className="text-zinc-500 italic font-light">{t('home.titlePart2')}</span> <br />
               {t('home.titlePart3')} <span className="text-blue-500">{t('home.titlePart4')}</span>
             </h1>
-          <p className="max-w-lg text-white text-[17px] mb-[30px] font-medium leading-relaxed drop-shadow-sm">
+          <p className="max-w-lg text-zinc-700 dark:text-white text-[17px] mb-[30px] font-medium leading-relaxed drop-shadow-sm">
             {t('home.desc')}
           </p>
             <div className="flex flex-wrap gap-4 md:gap-6">
               <Link to="/apply" className="bg-blue-600 hover:bg-blue-500 text-white px-8 md:px-10 py-4 md:py-5 rounded-full font-bold transition-all flex items-center gap-3 group shadow-[0_10px_30px_rgba(37,99,235,0.3)]">
                 {t('home.applyBtn')} <ArrowRight className="group-hover:translate-x-1 transition-transform" />
               </Link>
-              <Link to="/apply" className="glass-panel hover:border-white/20 px-8 md:px-10 py-4 md:py-5 rounded-full font-bold transition-all border border-white/10 hover:bg-blue-600/10">
+              <Link to="/apply" className="glass-panel hover:border-blue-500/30 px-8 md:px-10 py-4 md:py-5 rounded-full font-bold transition-all border border-black/10 dark:border-white/10 hover:bg-blue-600/10">
                 {t('home.certBtn')}
               </Link>
             </div>
@@ -292,10 +292,10 @@ export default function Home() {
               transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
               className="absolute top-[10%] right-[0%] z-30"
             >
-              <Link to="/apply" className="glass-panel px-5 py-3 rounded-2xl flex items-center gap-3 backdrop-blur-xl border border-white/20 hover:border-blue-400/50 hover:bg-blue-500/10 transition-all group shadow-2xl">
+              <Link to="/apply" className="glass-panel px-5 py-3 rounded-2xl flex items-center gap-3 backdrop-blur-xl border border-black/5 dark:border-white/20 hover:border-blue-400/50 hover:bg-blue-500/10 transition-all group shadow-xl">
                 <div className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
-                <Plane className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-sans tracking-tight uppercase font-bold text-zinc-100 group-hover:text-white transition-colors">{t('home.airCargo')}</span>
+                <Plane className="w-5 h-5 text-blue-500 dark:text-blue-400 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-sans tracking-tight uppercase font-bold text-zinc-700 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-white transition-colors">{t('home.airCargo')}</span>
               </Link>
             </motion.div>
 
@@ -368,7 +368,7 @@ export default function Home() {
                 drag
                 dragConstraints={{ left: -1000, right: 0, top: -500, bottom: 0 }}
                 dragElastic={0.1}
-                className="fixed bottom-24 right-6 w-56 glass-panel p-4 rounded-2xl border-white/10 backdrop-blur-3xl z-[1000] hidden xl:block cursor-grab active:cursor-grabbing shadow-2xl select-none"
+                className="fixed bottom-24 right-6 w-56 glass-panel p-4 rounded-2xl border-black/10 dark:border-white/10 backdrop-blur-3xl z-[1000] hidden xl:block cursor-grab active:cursor-grabbing shadow-2xl select-none"
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
@@ -389,14 +389,14 @@ export default function Home() {
                   <StatusItem label="Cert" value="98%" trend="OK" />
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-white/5 pointer-events-none">
+                <div className="mt-6 pt-4 border-t border-black/5 dark:border-white/5 pointer-events-none">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                      <Globe className="w-3 h-3 text-blue-400" />
+                      <Globe className="w-3 h-3 text-blue-500 dark:text-blue-400" />
                     </div>
                     <div>
-                      <p className="text-[8px] font-mono text-zinc-500">UPTIME</p>
-                      <p className="text-[10px] font-bold text-white font-mono">99.998%</p>
+                      <p className="text-[8px] font-mono text-zinc-400 dark:text-zinc-500">UPTIME</p>
+                      <p className="text-[10px] font-bold text-zinc-900 dark:text-white font-mono">99.998%</p>
                     </div>
                   </div>
                   <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
@@ -427,20 +427,20 @@ export default function Home() {
       </section>
       
       {/* QUICK TRACKING SECTION */}
-      <section className="py-12 px-6 border-y border-white/5 bg-zinc-950/30">
+      <section className="py-12 px-6 border-y border-black/5 dark:border-white/5 bg-zinc-100/50 dark:bg-zinc-950/30">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex items-center gap-6">
             <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-500">
                <Truck size={32} />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white mb-1">{t('agent.tracking.title')}</h3>
-              <p className="text-sm text-zinc-500">{t('agent.tracking.desc')}</p>
+              <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-1">{t('agent.tracking.title')}</h3>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">{t('agent.tracking.desc')}</p>
             </div>
           </div>
           <Link 
             to="/tracking" 
-            className="w-full md:w-auto bg-white/5 border border-white/10 hover:bg-white/10 text-white px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all group"
+            className="w-full md:w-auto bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-zinc-50 dark:hover:bg-white/10 text-zinc-900 dark:text-white px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all group shadow-sm dark:shadow-none"
           >
             <span>{t('agent.tracking.search')}</span>
             <Search className="w-4 h-4 group-hover:scale-125 transition-transform" />
@@ -449,7 +449,7 @@ export default function Home() {
       </section>
 
       {/* CORE FEATURES */}
-      <section className="pt-24 pb-16 bg-zinc-950 relative border-t border-white/5">
+      <section className="pt-24 pb-16 bg-white dark:bg-zinc-950 relative border-t border-black/5 dark:border-white/5">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <FeatureCard 
@@ -472,7 +472,7 @@ export default function Home() {
       </section>
 
       {/* MANUFACTURING SECTION */}
-      <section className="pt-16 pb-32 bg-zinc-950 relative overflow-hidden">
+      <section className="pt-16 pb-32 bg-white dark:bg-zinc-950 relative overflow-hidden">
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-cyan-600/5 blur-[120px] rounded-full pointer-events-none" />
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
           <motion.div
@@ -481,29 +481,29 @@ export default function Home() {
             viewport={{ once: true }}
             className="space-y-8"
           >
-            <div className="inline-block px-4 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-500 text-xs font-mono font-black tracking-widest uppercase">
+            <div className="inline-block px-4 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-500 text-xs font-mono font-black tracking-widest uppercase">
               {t('home.mfgInfra')}
             </div>
-            <h2 className="text-4xl md:text-6xl font-display font-black leading-tight tracking-tighter">
-              {t('home.mfgSectionTitlePart1')} <span className="text-cyan-500 italic">{t('home.mfgSectionTitlePart2')}</span> <br />
+            <h2 className="text-4xl md:text-6xl font-display font-black leading-tight tracking-tighter text-zinc-900 dark:text-white">
+              {t('home.mfgSectionTitlePart1')} <span className="text-cyan-600 dark:text-cyan-500 italic">{t('home.mfgSectionTitlePart2')}</span> <br />
               {t('home.mfgSectionTitlePart3')}
             </h2>
-            <p className="text-zinc-400 text-[17px] font-light leading-relaxed max-w-xl">
+            <p className="text-zinc-600 dark:text-zinc-400 text-[17px] font-light leading-relaxed max-w-xl">
               {t('home.mfgSectionDesc')}
             </p>
             <div className="grid grid-cols-2 gap-6 pt-4">
               <div className="space-y-2">
-                <div className="text-cyan-500 font-black text-2xl font-mono">01.</div>
-                <div className="font-bold text-white">{t('home.mfgStep1Title')}</div>
-                <div className="text-[13px] text-zinc-400 leading-relaxed font-light">{t('home.mfgStep1Desc')}</div>
+                <div className="text-cyan-600 dark:text-cyan-500 font-black text-2xl font-mono">01.</div>
+                <div className="font-bold text-zinc-900 dark:text-white">{t('home.mfgStep1Title')}</div>
+                <div className="text-[13px] text-zinc-600 dark:text-zinc-400 leading-relaxed font-light">{t('home.mfgStep1Desc')}</div>
               </div>
               <div className="space-y-2">
-                <div className="text-cyan-500 font-black text-2xl font-mono">02.</div>
-                <div className="font-bold text-white">{t('home.mfgStep2Title')}</div>
-                <div className="text-[13px] text-zinc-400 leading-relaxed font-light">{t('home.mfgStep2Desc')}</div>
+                <div className="text-cyan-600 dark:text-cyan-500 font-black text-2xl font-mono">02.</div>
+                <div className="font-bold text-zinc-900 dark:text-white">{t('home.mfgStep2Title')}</div>
+                <div className="text-[13px] text-zinc-600 dark:text-zinc-400 leading-relaxed font-light">{t('home.mfgStep2Desc')}</div>
               </div>
             </div>
-            <Link to="/apply" className="inline-flex items-center gap-3 bg-white text-black px-10 py-5 rounded-full font-black text-lg hover:bg-zinc-200 transition-all group">
+            <Link to="/apply" className="inline-flex items-center gap-3 bg-zinc-900 dark:bg-white text-white dark:text-black px-10 py-5 rounded-full font-black text-lg hover:bg-black dark:hover:bg-zinc-200 transition-all group shadow-xl">
               {t('home.manufacturing')} {t('home.mfgCta')} <ArrowRight className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </motion.div>
@@ -531,13 +531,13 @@ export default function Home() {
               </div>
               
               {/* Floating badges */}
-              <div className="absolute top-10 left-10 glass-panel p-4 rounded-xl border-white/10 backdrop-blur-xl">
-                 <p className="text-[10px] font-mono text-zinc-500 uppercase mb-1">OEM_CAPACITY</p>
-                 <p className="text-xl font-black text-white">HIGH_FLEX</p>
+              <div className="absolute top-10 left-10 glass-panel p-4 rounded-xl border-black/5 dark:border-white/10 backdrop-blur-xl">
+                 <p className="text-[10px] font-mono text-zinc-500 dark:text-zinc-500 uppercase mb-1">OEM_CAPACITY</p>
+                 <p className="text-xl font-black text-zinc-900 dark:text-white">HIGH_FLEX</p>
               </div>
-              <div className="absolute bottom-10 right-10 glass-panel p-4 rounded-xl border-white/10 backdrop-blur-xl">
-                 <p className="text-[10px] font-mono text-zinc-500 uppercase mb-1">PROTOTYPING</p>
-                 <p className="text-xl font-black text-white">RAPID_QC</p>
+              <div className="absolute bottom-10 right-10 glass-panel p-4 rounded-xl border-black/5 dark:border-white/10 backdrop-blur-xl">
+                 <p className="text-[10px] font-mono text-zinc-500 dark:text-zinc-500 uppercase mb-1">PROTOTYPING</p>
+                 <p className="text-xl font-black text-zinc-900 dark:text-white">RAPID_QC</p>
               </div>
             </div>
           </motion.div>
@@ -579,7 +579,7 @@ function StatusItem({ label, value, trend }: { label: string, value: string, tre
           {trend}
         </span>
       </div>
-      <p className="text-xl font-display font-black text-white">{value}</p>
+      <p className="text-xl font-display font-black text-zinc-900 dark:text-white">{value}</p>
     </div>
   );
 }
@@ -595,8 +595,8 @@ function FeatureCard({ icon, title, description }: { icon: ReactNode, title: str
           {icon}
         </div>
         <div>
-          <h3 className="text-2xl font-bold mb-4 text-white uppercase tracking-tight">{title}</h3>
-          <p className="text-zinc-300 text-base leading-relaxed break-keep font-medium">{description}</p>
+          <h3 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-white uppercase tracking-tight">{title}</h3>
+          <p className="text-zinc-600 dark:text-zinc-300 text-base leading-relaxed break-keep font-medium">{description}</p>
         </div>
       </motion.div>
     </Link>

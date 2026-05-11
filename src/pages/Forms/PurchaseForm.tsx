@@ -59,16 +59,16 @@ export default function PurchaseForm() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormGroup label="신청인 성함" error={errors.name?.message}>
-                  <input {...register('name')} className="form-input border-white/20 text-white font-medium" placeholder="이름" />
+                  <input {...register('name')} className="form-input text-zinc-900 dark:text-white font-medium" placeholder="이름" />
                 </FormGroup>
                 <FormGroup label="회사명 (선택)" error={errors.companyName?.message}>
-                  <input {...register('companyName')} className="form-input border-white/20 text-white font-medium" placeholder="업체명" />
+                  <input {...register('companyName')} className="form-input text-zinc-900 dark:text-white font-medium" placeholder="업체명" />
                 </FormGroup>
                 <FormGroup label="연락처" error={errors.phone?.message}>
-                  <input {...register('phone')} className="form-input border-white/20 text-white font-medium" placeholder="010-0000-0000" />
+                  <input {...register('phone')} className="form-input text-zinc-900 dark:text-white font-medium" placeholder="010-0000-0000" />
                 </FormGroup>
                 <FormGroup label="이메일" error={errors.email?.message}>
-                  <input {...register('email')} className="form-input border-white/20 text-white font-medium" placeholder="contact@example.com" />
+                  <input {...register('email')} className="form-input text-zinc-900 dark:text-white font-medium" placeholder="contact@example.com" />
                 </FormGroup>
               </div>
             </section>
@@ -92,7 +92,7 @@ export default function PurchaseForm() {
                 </FormGroup>
               </div>
 
-              <div className="space-y-4 pt-4 border-t border-white/5">
+              <div className="space-y-4 pt-4 border-t border-black/5 dark:border-white/5">
                 <p className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-widest">추가 서비스 선택</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <SelectBox 
@@ -154,12 +154,12 @@ export default function PurchaseForm() {
             </div>
           </div>
           
-          <div className="bg-zinc-900 p-8 rounded-3xl border border-white/5">
-            <div className="flex items-center gap-2 text-blue-400 mb-4">
+          <div className="bg-zinc-100 dark:bg-zinc-900 p-8 rounded-3xl border border-black/5 dark:border-white/5">
+            <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-4">
               <CheckCircle size={16} />
               <span className="text-xs font-bold uppercase tracking-widest">GlobLogix Benefit</span>
             </div>
-            <p className="text-zinc-400 text-sm leading-relaxed italic">
+            <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed italic">
               "우리는 단순한 구매를 넘어 비즈니스의 성공을 위한 파트너가 됩니다. 중국 현지 인프라를 활용하여 최상의 품질을 보장합니다."
             </p>
           </div>
@@ -187,10 +187,10 @@ function SelectBox({ id, label, register, desc }: { id: string, label: string, r
       <input type="checkbox" id={id} {...register} className="peer hidden" />
       <label 
         htmlFor={id} 
-        className="block p-4 border border-white/5 rounded-2xl bg-white/5 text-center cursor-pointer transition-all peer-checked:bg-blue-600/20 peer-checked:border-blue-500 hover:bg-white/10"
+        className="block p-4 border border-black/5 dark:border-white/5 rounded-2xl bg-black/5 dark:bg-white/5 text-center cursor-pointer transition-all peer-checked:bg-blue-600/20 peer-checked:border-blue-500 hover:bg-black/10 dark:hover:bg-white/10"
       >
-        <span className="block text-xs font-bold mb-1 text-zinc-300 peer-checked:text-white">{label}</span>
-        <span className="text-[9px] text-zinc-500 font-medium group-hover:text-zinc-400">{desc}</span>
+        <span className="block text-xs font-bold mb-1 text-zinc-600 dark:text-zinc-300 peer-checked:text-zinc-900 dark:peer-checked:text-white font-display uppercase tracking-tight">{label}</span>
+        <span className="text-[9px] text-zinc-500 font-medium group-hover:text-zinc-600 dark:group-hover:text-zinc-400">{desc}</span>
       </label>
     </div>
   );
@@ -201,8 +201,8 @@ function Step({ num, title, desc }: { num: string, title: string, desc: string }
     <div className="flex gap-4">
       <span className="text-blue-500 font-mono text-sm font-bold">{num}</span>
       <div>
-        <h4 className="text-sm font-bold text-zinc-200">{title}</h4>
-        <p className="text-xs text-zinc-500">{desc}</p>
+        <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-200">{title}</h4>
+        <p className="text-xs text-zinc-600 dark:text-zinc-500">{desc}</p>
       </div>
     </div>
   );

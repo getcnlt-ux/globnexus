@@ -8,11 +8,11 @@ import WireframeGlobe from '../../components/common/WireframeGlobe';
 export default function About() {
   const { t } = useTranslation();
   return (
-    <div className="bg-black text-white min-h-screen relative overflow-hidden">
+    <div className="bg-zinc-50 dark:bg-black text-zinc-900 dark:text-white min-h-screen relative overflow-hidden transition-colors duration-300">
       {/* Global Background Elements */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(37,99,235,0.05)_0%,transparent_50%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100px_100px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.02)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100px_100px]" />
       </div>
 
       {/* 1. HERO SECTION: Vision & Identity */}
@@ -38,13 +38,13 @@ export default function About() {
               </span>
             </motion.div>
             
-            <h1 className="text-6xl md:text-8xl xl:text-9xl font-display font-extrabold leading-[0.85] mb-12 tracking-tighter">
+            <h1 className="text-6xl md:text-8xl xl:text-9xl font-display font-extrabold leading-[0.85] mb-12 tracking-tighter text-zinc-900 dark:text-white">
               {t('about.titlePart1')} <br /> 
-              <span className="text-zinc-600 italic font-light">{t('about.titlePart2')}</span> <br />
+              <span className="text-zinc-500 italic font-light">{t('about.titlePart2')}</span> <br />
               {t('about.titlePart3')} <span className="text-blue-500 font-black">{t('about.titlePart4')}</span>
             </h1>
             
-            <div className="max-w-2xl text-zinc-400 text-lg md:text-xl font-light leading-relaxed space-y-6 border-l border-blue-500/20 pl-8 break-keep">
+            <div className="max-w-2xl text-zinc-600 dark:text-zinc-400 text-lg md:text-xl font-medium dark:font-light leading-relaxed space-y-6 border-l-2 border-blue-500/20 pl-8 break-keep">
               <p>
                 {t('about.intro1')}
               </p>
@@ -67,7 +67,7 @@ export default function About() {
       </section>
 
       {/* 2. CORE PHILOSOPHY: Insight + Control */}
-      <section className="py-40 bg-zinc-950/50 backdrop-blur-3xl border-y border-white/5 relative">
+      <section className="py-40 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-3xl border-y border-black/5 dark:border-white/5 relative">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.02)_0%,transparent_70%)] pointer-events-none" />
         
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-24 items-center">
@@ -119,7 +119,7 @@ export default function About() {
             className="relative aspect-[4/5] md:aspect-square"
           >
             <div className="absolute inset-0 bg-blue-600/5 blur-[120px] rounded-full animate-pulse" />
-            <div className="relative glass-panel w-full h-full rounded-[40px] border-white/5 flex items-center justify-center overflow-hidden">
+            <div className="relative glass-panel w-full h-full rounded-[40px] border-black/5 dark:border-white/5 flex items-center justify-center overflow-hidden">
                {/* Tech scan lines decorative */}
                <div className="absolute inset-0 opacity-20">
                  <div className="grid grid-cols-12 h-full w-full">
@@ -225,12 +225,12 @@ export default function About() {
       </section>
 
       {/* 4. MISSION STATEMENT */}
-      <section className="py-60 bg-black relative overflow-hidden text-center px-6">
+      <section className="py-60 bg-white dark:bg-black relative overflow-hidden text-center px-6 transition-colors duration-300">
          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.08)_0%,transparent_60%)]" />
          
          {/* Decorative Rings */}
-         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] border border-white/5 rounded-full pointer-events-none" />
-         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] border border-white/5 rounded-full pointer-events-none" />
+         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] border border-black/5 dark:border-white/5 rounded-full pointer-events-none" />
+         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] border border-black/5 dark:border-white/5 rounded-full pointer-events-none" />
 
          <motion.div
            initial={{ opacity: 0, y: 30 }}
@@ -245,7 +245,7 @@ export default function About() {
               className="w-16 h-16 rounded-full bg-blue-600/20 blur-xl mx-auto mb-12"
             />
             
-            <h3 className="text-[35px] font-display font-medium text-white mb-16 leading-relaxed max-w-3xl mx-auto">
+            <h3 className="text-[35px] font-display font-bold dark:font-medium text-zinc-900 dark:text-white mb-16 leading-relaxed max-w-3xl mx-auto">
               "{t('about.mission')}"
             </h3>
             

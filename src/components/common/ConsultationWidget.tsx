@@ -100,7 +100,9 @@ export default function ConsultationWidget() {
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300",
-          isOpen ? "bg-zinc-800 text-white rotate-90" : "bg-blue-600 text-white"
+          isOpen 
+            ? "bg-zinc-800 dark:bg-white text-white dark:text-black rotate-90" 
+            : "bg-blue-600 text-white"
         )}
       >
         <AnimatePresence mode="wait">
@@ -153,13 +155,13 @@ export default function ConsultationWidget() {
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-zinc-900 border border-white/10 rounded-full px-4 py-2 flex items-center gap-3 shadow-xl"
+          className="bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/10 rounded-full px-4 py-2 flex items-center gap-3 shadow-xl"
         >
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500">
               <User size={12} />
             </div>
-            <span className="text-[10px] font-mono text-zinc-300">
+            <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-300">
               {profile?.displayName || user.email}
             </span>
             {profile?.role === 'admin' && (

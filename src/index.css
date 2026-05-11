@@ -1,7 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 @theme {
+  --variant-dark: .dark &;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
@@ -16,7 +19,7 @@
 
 @layer base {
   body {
-    @apply bg-zinc-950 text-zinc-100 font-sans antialiased selection:bg-blue-500/30;
+    @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 font-sans antialiased selection:bg-blue-500/30 transition-colors duration-300;
   }
   
   /* Improve visibility for small text globally */
@@ -25,20 +28,20 @@
   }
 
   .text-zinc-500 {
-    @apply text-zinc-400; /* Bump up contrast */
+    @apply text-zinc-500 dark:text-zinc-400; /* Bump up contrast in dark mode */
   }
 
   .text-zinc-400 {
-    @apply text-zinc-300;
+    @apply text-zinc-400 dark:text-zinc-300;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display tracking-tight text-white;
+    @apply font-display tracking-tight text-zinc-900 dark:text-white;
   }
 }
 
 .glass-panel {
-  @apply bg-white/5 backdrop-blur-lg border border-white/10;
+  @apply bg-white/60 dark:bg-white/5 backdrop-blur-lg border border-black/5 dark:border-white/10 shadow-sm dark:shadow-none;
 }
 
 .robot-wireframe {
@@ -81,7 +84,7 @@
 }
 
 .form-input {
-  @apply w-full bg-zinc-900 border border-white/10 rounded-xl px-5 py-3 outline-none focus:border-blue-500/50 transition-colors text-zinc-100 placeholder:text-zinc-600;
+  @apply w-full bg-white dark:bg-zinc-900 border border-black/10 dark:border-white/10 rounded-xl px-5 py-3 outline-none focus:border-blue-500/50 transition-colors text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600;
 }
 
 @keyframes marquee {

@@ -58,16 +58,16 @@ export default function LogisticsForm() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormGroup label="피신청인 / 담당자" error={errors.name?.message}>
-                  <input {...register('name')} className="form-input border-white/20 text-white font-medium" placeholder="성함" />
+                  <input {...register('name')} className="form-input text-zinc-900 dark:text-white font-medium" placeholder="성함" />
                 </FormGroup>
                 <FormGroup label="회사명 (선택)" error={errors.companyName?.message}>
-                  <input {...register('companyName')} className="form-input border-white/20 text-white font-medium" placeholder="기구명 / 업체명" />
+                  <input {...register('companyName')} className="form-input text-zinc-900 dark:text-white font-medium" placeholder="기구명 / 업체명" />
                 </FormGroup>
                 <FormGroup label="연락처" error={errors.phone?.message}>
-                  <input {...register('phone')} className="form-input border-white/20 text-white font-medium" placeholder="010-0000-0000" />
+                  <input {...register('phone')} className="form-input text-zinc-900 dark:text-white font-medium" placeholder="010-0000-0000" />
                 </FormGroup>
                 <FormGroup label="이메일" error={errors.email?.message}>
-                  <input {...register('email')} className="form-input border-white/20 text-white font-medium" placeholder="contact@example.com" />
+                  <input {...register('email')} className="form-input text-zinc-900 dark:text-white font-medium" placeholder="contact@example.com" />
                 </FormGroup>
               </div>
             </section>
@@ -106,7 +106,7 @@ export default function LogisticsForm() {
                 </FormGroup>
                 <div className="flex items-center gap-3 pt-6 px-1">
                   <input type="checkbox" {...register('certRequired')} id="certRequired" className="w-5 h-5 accent-blue-600 rounded" />
-                  <label htmlFor="certRequired" className="text-sm text-zinc-300 font-medium">인증/통관 대행 필요</label>
+                  <label htmlFor="certRequired" className="text-sm text-zinc-600 dark:text-zinc-300 font-medium">인증/통관 대행 필요</label>
                 </div>
               </div>
               <FormGroup label="추가 요청사항">
@@ -145,13 +145,13 @@ export default function LogisticsForm() {
             <p className="text-zinc-400 text-sm leading-relaxed mb-6">
               GlobLogix Robotics는 고도의 보안 시스템을 통해 고객님의 화물 정보를 관리합니다. 모든 정보는 암호화되어 전송됩니다.
             </p>
-            <div className="p-4 bg-zinc-900/50 rounded-xl border border-white/5 space-y-3">
+            <div className="p-4 bg-zinc-100 dark:bg-zinc-900/50 rounded-xl border border-black/5 dark:border-white/5 space-y-3">
               <div className="flex items-center gap-3 text-xs text-zinc-500">
-                <div className="w-1 h-1 bg-zinc-600 rounded-full" />
+                <div className="w-1 h-1 bg-zinc-300 dark:bg-zinc-600 rounded-full" />
                 <span>24/7 실시간 관제</span>
               </div>
               <div className="flex items-center gap-3 text-xs text-zinc-500">
-                <div className="w-1 h-1 bg-zinc-600 rounded-full" />
+                <div className="w-1 h-1 bg-zinc-300 dark:bg-zinc-600 rounded-full" />
                 <span>글로벌 네트워크 보안</span>
               </div>
             </div>
@@ -159,13 +159,13 @@ export default function LogisticsForm() {
 
           <div className="glass-panel p-8 rounded-3xl">
              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center font-bold text-white">?</div>
+                <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20 text-lg">?</div>
                 <div>
-                   <h4 className="font-bold">도움이 필요하신가요?</h4>
-                   <p className="text-xs text-zinc-500">전문 상담원이 대기 중입니다.</p>
+                   <h4 className="font-bold text-zinc-900 dark:text-white">도움이 필요하신가요?</h4>
+                   <p className="text-xs text-zinc-600 dark:text-zinc-500">전문 상담원이 대기 중입니다.</p>
                 </div>
              </div>
-             <a href="tel:0212345678" className="block text-center py-4 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-all font-mono font-bold text-blue-400">
+             <a href="tel:0212345678" className="block text-center py-4 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 rounded-xl border border-black/5 dark:border-white/5 transition-all font-mono font-bold text-blue-600 dark:text-blue-400">
                 TEL. 02-1234-5678
              </a>
           </div>

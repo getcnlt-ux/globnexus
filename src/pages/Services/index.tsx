@@ -42,7 +42,7 @@ export default function Services() {
 
   return (
     <div className="pt-32 pb-20 px-6 max-w-7xl mx-auto">
-      <h1 className="text-4xl md:text-7xl font-display font-bold mb-20 text-center">{t('services_page.title')}</h1>
+      <h1 className="text-4xl md:text-7xl font-display font-extrabold mb-20 text-center text-zinc-900 dark:text-white tracking-tighter italic">{t('services_page.title')}</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {services.map((service, i) => (
           <Link 
@@ -59,8 +59,8 @@ export default function Services() {
               <div className="text-blue-500 mb-8 p-4 bg-blue-500/5 rounded-2xl w-fit group-hover:bg-blue-500 group-hover:text-white transition-colors">
                 {service.icon}
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-white uppercase tracking-tight">{service.title}</h3>
-              <p className="text-zinc-300 text-lg leading-relaxed font-medium">{service.description}</p>
+              <h3 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-white uppercase tracking-tight">{service.title}</h3>
+              <p className="text-zinc-600 dark:text-zinc-300 text-lg leading-relaxed font-medium">{service.description}</p>
             </motion.div>
           </Link>
         ))}

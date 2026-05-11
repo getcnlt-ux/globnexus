@@ -26,7 +26,7 @@ export default function Contact() {
             <label className="text-xs font-bold text-zinc-400">{t('contact_page.fields.message')}</label>
             <textarea className="form-input min-h-[150px] py-4" placeholder={t('contact_page.fields.message_placeholder')}></textarea>
           </div>
-          <button className="w-full bg-zinc-100 text-zinc-950 py-5 rounded-xl font-bold hover:bg-white transition-colors">
+          <button className="w-full bg-blue-600 hover:bg-blue-500 text-white py-5 rounded-xl font-bold transition-all shadow-[0_10px_30px_rgba(37,99,235,0.2)]">
             {t('contact_page.submit')}
           </button>
         </form>

@@ -196,7 +196,7 @@ export default function TrackingPage() {
   const currentStepIndex = STEPS.findIndex(s => s.id === result?.currentStep);
 
   return (
-    <div className="flex-grow pt-32 pb-20 px-6">
+    <div className="flex-grow pt-32 pb-20 px-6 bg-zinc-50 dark:bg-black transition-colors duration-300">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <motion.div
@@ -206,8 +206,8 @@ export default function TrackingPage() {
             <span className="text-blue-500 font-mono text-xs font-black tracking-widest uppercase mb-4 block">
               // LOGISTICS_TRACKING
             </span>
-            <h1 className="text-4xl md:text-5xl font-display font-bold mb-4">{t('agent.tracking.title')}</h1>
-            <p className="text-zinc-400 max-w-xl mx-auto">{t('agent.tracking.desc')}</p>
+            <h1 className="text-4xl md:text-7xl font-display font-extrabold mb-6 tracking-tighter text-zinc-900 dark:text-white uppercase italic">{t('agent.tracking.title')}</h1>
+            <p className="text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto text-lg font-medium">{t('agent.tracking.desc')}</p>
           </motion.div>
         </div>
 
@@ -218,7 +218,7 @@ export default function TrackingPage() {
           transition={{ delay: 0.1 }}
           className="relative mb-12"
         >
-          <div className="glass-panel p-2 rounded-2xl border-white/10 flex items-center gap-4 bg-white/5 pr-4">
+          <div className="glass-panel p-2 rounded-2xl border-black/5 dark:border-white/10 flex items-center gap-4 bg-black/5 dark:bg-white/5 pr-4">
             <div className="flex-grow flex items-center pl-4 gap-3">
               <Search className="text-zinc-500 shrink-0" size={20} />
               <input 
@@ -226,7 +226,7 @@ export default function TrackingPage() {
                 value={trackingNumber}
                 onChange={(e) => setTrackingNumber(e.target.value)}
                 placeholder={t('agent.tracking.inputPlaceholder')}
-                className="w-full bg-transparent border-none text-white focus:ring-0 placeholder:text-zinc-600 font-bold py-3"
+                className="w-full bg-transparent border-none text-zinc-900 dark:text-white focus:ring-0 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 font-bold py-3"
               />
             </div>
             <button 
@@ -257,10 +257,10 @@ export default function TrackingPage() {
                 <button
                   key={shipment.number}
                   onClick={() => handleSearch(undefined, shipment.number)}
-                  className="glass-panel p-5 rounded-2xl border-white/5 bg-white/5 hover:border-blue-500/30 transition-all text-left group"
+                  className="glass-panel p-5 rounded-2xl border-black/5 dark:border-white/5 bg-black/5 dark:bg-white/5 hover:border-blue-500/30 transition-all text-left group"
                 >
                   <div className="flex justify-between items-start mb-3">
-                    <span className="text-[10px] font-mono text-zinc-500 bg-white/5 px-2 py-0.5 rounded">
+                    <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-500 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded">
                       {shipment.number}
                     </span>
                     <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
@@ -314,12 +314,12 @@ export default function TrackingPage() {
                       
                       <div className={`
                         w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-500
-                        ${isActive ? 'bg-blue-500/20 border-blue-500 text-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-zinc-900 border-zinc-800 text-zinc-600'}
+                        ${isActive ? 'bg-blue-500/20 border-blue-500 text-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-zinc-200 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600'}
                         ${isCurrent ? 'animate-pulse' : ''}
                       `}>
                         <Icon size={18} />
                       </div>
-                      <span className={`text-[9px] mt-3 font-bold uppercase tracking-wider text-center max-w-[80px] ${isActive ? 'text-blue-500' : 'text-zinc-600'}`}>
+                      <span className={`text-[9px] mt-3 font-bold uppercase tracking-wider text-center max-w-[80px] ${isActive ? 'text-blue-500' : 'text-zinc-400 dark:text-zinc-600'}`}>
                         {t(`agent.tracking.statusLabels.${step.id}`)}
                       </span>
                     </div>
@@ -327,49 +327,49 @@ export default function TrackingPage() {
                 })}
               </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center border-t border-white/5 pt-8">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center border-t border-black/5 dark:border-white/5 pt-8">
                 <div>
-                  <p className="text-[11px] text-zinc-300 uppercase font-bold font-mono mb-1">{t('agent.tracking.currentStep')}</p>
-                  <p className="font-bold text-white uppercase">{t(`agent.tracking.statusLabels.${result.currentStep}`)}</p>
+                  <p className="text-[11px] text-zinc-600 dark:text-zinc-300 uppercase font-bold font-mono mb-1">{t('agent.tracking.currentStep')}</p>
+                  <p className="font-bold text-zinc-900 dark:text-white uppercase">{t(`agent.tracking.statusLabels.${result.currentStep}`)}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] text-zinc-300 uppercase font-bold font-mono mb-1">Tracking Number</p>
-                  <p className="font-bold text-white font-mono">{result.number}</p>
+                  <p className="text-[11px] text-zinc-600 dark:text-zinc-300 uppercase font-bold font-mono mb-1">Tracking Number</p>
+                  <p className="font-bold text-zinc-900 dark:text-white font-mono">{result.number}</p>
                 </div>
                 <div className="col-span-2">
-                  <p className="text-[11px] text-zinc-300 uppercase font-bold font-mono mb-1">{t('agent.tracking.lastUpdate')}</p>
-                  <p className="font-bold text-white">{result.lastUpdate}</p>
+                  <p className="text-[11px] text-zinc-600 dark:text-zinc-300 uppercase font-bold font-mono mb-1">{t('agent.tracking.lastUpdate')}</p>
+                  <p className="font-bold text-zinc-900 dark:text-white">{result.lastUpdate}</p>
                 </div>
               </div>
             </div>
 
             {/* Event Details */}
-            <div className="glass-panel overflow-hidden rounded-3xl border-white/10">
-              <div className="p-6 border-b border-white/5 bg-white/5 flex items-center justify-between">
-                <h2 className="font-bold flex items-center gap-2">
+            <div className="glass-panel overflow-hidden rounded-3xl border-black/5 dark:border-white/10">
+              <div className="p-6 border-b border-black/5 dark:border-white/5 bg-black/5 dark:bg-white/5 flex items-center justify-between">
+                <h2 className="font-bold flex items-center gap-2 text-zinc-900 dark:text-white">
                   <Clock size={18} className="text-blue-500" />
                   {t('agent.tracking.details')}
                 </h2>
               </div>
               <div className="p-8">
-                <div className="space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-white/10">
+                <div className="space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-black/5 dark:before:bg-white/10">
                   {result.events.map((event: any, i: number) => (
                     <div key={i} className="relative pl-10 flex gap-6">
                       <div className={`
-                        absolute left-0 top-1.5 w-[23px] h-[23px] rounded-full border-2 bg-zinc-950 flex items-center justify-center z-10
-                        ${i === 0 ? 'border-blue-500 text-blue-500' : 'border-zinc-800 text-zinc-600'}
+                        absolute left-0 top-1.5 w-[23px] h-[23px] rounded-full border-2 bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center z-10
+                        ${i === 0 ? 'border-blue-500 text-blue-500' : 'border-zinc-300 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600'}
                       `}>
                         {i === 0 ? <Truck size={12} /> : <div className="w-1.5 h-1.5 rounded-full bg-current" />}
                       </div>
                       
                       <div className="flex-grow">
                         <div className="flex items-center justify-between mb-1">
-                          <p className={`font-bold ${i === 0 ? 'text-white' : 'text-zinc-400'}`}>
+                          <p className={`font-bold ${i === 0 ? 'text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400'}`}>
                             {t(`agent.tracking.statusLabels.${event.status}`)}
                           </p>
-                          <span className="text-[10px] font-mono text-zinc-500">{event.time}</span>
+                          <span className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500">{event.time}</span>
                         </div>
-                        <p className="text-zinc-300 text-base mb-1 font-medium">{event.desc}</p>
+                        <p className="text-zinc-600 dark:text-zinc-300 text-base mb-1 font-medium">{event.desc}</p>
                         <div className="flex items-center gap-1 text-[10px] text-blue-500/70 font-mono">
                           <MapPin size={10} />
                           {event.location}

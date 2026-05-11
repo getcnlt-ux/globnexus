@@ -124,18 +124,18 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-zinc-900/40 dark:bg-black/80 backdrop-blur-sm"
           />
           
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-md glass-panel p-8 rounded-3xl border-white/10 shadow-2xl"
+            className="relative w-full max-w-md glass-panel p-8 rounded-3xl border-black/5 dark:border-white/10 shadow-2xl"
           >
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors"
+              className="absolute top-4 right-4 p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors text-zinc-500 dark:text-zinc-400"
             >
               <X size={20} />
             </button>
@@ -178,10 +178,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
 
               <div className="relative py-4">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-white/10"></div>
+                  <div className="w-full border-t border-black/10 dark:border-white/10"></div>
                 </div>
                 <div className="relative flex justify-center text-[10px] uppercase font-mono tracking-widest">
-                  <span className="bg-black px-4 text-zinc-500">또는 이메일로 로그인</span>
+                  <span className="bg-zinc-50 dark:bg-black px-4 text-zinc-500 dark:text-zinc-500">또는 이메일로 로그인</span>
                 </div>
               </div>
 
@@ -195,7 +195,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                       type="text"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-sm focus:border-blue-500 outline-none transition-colors"
+                      className="w-full bg-black/[0.03] dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl py-3 pl-12 pr-4 text-sm focus:border-blue-500 outline-none transition-colors dark:text-white"
                       placeholder="Your name"
                       required={!isLogin}
                     />
@@ -211,7 +211,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-sm focus:border-blue-500 outline-none transition-colors"
+                    className="w-full bg-black/[0.03] dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl py-3 pl-12 pr-4 text-sm focus:border-blue-500 outline-none transition-colors dark:text-white"
                     placeholder="name@company.com"
                     required
                   />
@@ -226,7 +226,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-sm focus:border-blue-500 outline-none transition-colors"
+                    className="w-full bg-black/[0.03] dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl py-3 pl-12 pr-4 text-sm focus:border-blue-500 outline-none transition-colors dark:text-white"
                     placeholder="••••••••"
                     required
                   />
@@ -265,7 +265,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
             <div className="mt-8 text-center">
               <button
                 onClick={() => setIsLogin(!isLogin)}
-                className="text-sm text-zinc-400 hover:text-white transition-colors"
+                className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-blue-500 dark:hover:text-white transition-colors"
               >
                 {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
               </button>
