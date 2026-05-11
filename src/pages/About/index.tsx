@@ -44,7 +44,7 @@ export default function About() {
               {t('about.titlePart3')} <span className="text-blue-500 font-black">{t('about.titlePart4')}</span>
             </h1>
             
-            <div className="max-w-2xl text-zinc-600 dark:text-zinc-400 text-lg md:text-xl font-medium dark:font-light leading-relaxed space-y-6 border-l-2 border-blue-500/20 pl-8 break-keep">
+            <div className="max-w-2xl text-zinc-800 dark:text-zinc-400 text-lg md:text-xl font-medium leading-relaxed space-y-6 border-l-2 border-blue-500/20 pl-8 break-keep">
               <p>
                 {t('about.intro1')}
               </p>
@@ -96,7 +96,7 @@ export default function About() {
                   </div>
                   <div>
                     <h4 className="font-bold text-xl mb-2">{t('about.strength1Title')}</h4>
-                    <p className="text-base text-zinc-300 leading-relaxed font-light">{t('about.strength1Desc')}</p>
+                    <p className="text-base text-zinc-800 dark:text-zinc-300 leading-relaxed font-medium">{t('about.strength1Desc')}</p>
                   </div>
                </div>
                <div className="space-y-5">
@@ -105,7 +105,7 @@ export default function About() {
                   </div>
                   <div>
                     <h4 className="font-bold text-xl mb-2">{t('about.strength2Title')}</h4>
-                    <p className="text-[17px] text-zinc-300 leading-relaxed font-light">{t('about.strength2Desc')}</p>
+                    <p className="text-[17px] text-zinc-800 dark:text-zinc-300 leading-relaxed font-medium">{t('about.strength2Desc')}</p>
                   </div>
                </div>
             </div>
@@ -279,7 +279,7 @@ function StrengthCard({ icon, title, desc, index }: { icon: React.ReactNode, tit
       </div>
       <div>
         <h3 className="text-2xl font-bold mb-4 tracking-tight group-hover:text-blue-400 transition-colors">{title}</h3>
-        <p className="text-zinc-200 text-base leading-relaxed font-medium">{desc}</p>
+        <p className="text-zinc-800 dark:text-zinc-200 text-base leading-relaxed font-bold">{desc}</p>
       </div>
       
       <div className="mt-auto pt-4 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">

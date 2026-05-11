@@ -260,7 +260,7 @@ export default function TrackingPage() {
                   className="glass-panel p-5 rounded-2xl border-black/5 dark:border-white/5 bg-black/5 dark:bg-white/5 hover:border-blue-500/30 transition-all text-left group"
                 >
                   <div className="flex justify-between items-start mb-3">
-                    <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-500 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded">
+                    <span className="text-[10px] font-mono text-zinc-700 dark:text-zinc-500 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded">
                       {shipment.number}
                     </span>
                     <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
@@ -329,15 +329,15 @@ export default function TrackingPage() {
 
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center border-t border-black/5 dark:border-white/5 pt-8">
                 <div>
-                  <p className="text-[11px] text-zinc-600 dark:text-zinc-300 uppercase font-bold font-mono mb-1">{t('agent.tracking.currentStep')}</p>
+                  <p className="text-[11px] text-zinc-700 dark:text-zinc-300 uppercase font-bold font-mono mb-1">{t('agent.tracking.currentStep')}</p>
                   <p className="font-bold text-zinc-900 dark:text-white uppercase">{t(`agent.tracking.statusLabels.${result.currentStep}`)}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] text-zinc-600 dark:text-zinc-300 uppercase font-bold font-mono mb-1">Tracking Number</p>
+                  <p className="text-[11px] text-zinc-700 dark:text-zinc-300 uppercase font-bold font-mono mb-1">Tracking Number</p>
                   <p className="font-bold text-zinc-900 dark:text-white font-mono">{result.number}</p>
                 </div>
                 <div className="col-span-2">
-                  <p className="text-[11px] text-zinc-600 dark:text-zinc-300 uppercase font-bold font-mono mb-1">{t('agent.tracking.lastUpdate')}</p>
+                  <p className="text-[11px] text-zinc-700 dark:text-zinc-300 uppercase font-bold font-mono mb-1">{t('agent.tracking.lastUpdate')}</p>
                   <p className="font-bold text-zinc-900 dark:text-white">{result.lastUpdate}</p>
                 </div>
               </div>
@@ -364,10 +364,10 @@ export default function TrackingPage() {
                       
                       <div className="flex-grow">
                         <div className="flex items-center justify-between mb-1">
-                          <p className={`font-bold ${i === 0 ? 'text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400'}`}>
+                          <p className={`font-bold ${i === 0 ? 'text-zinc-900 dark:text-white' : 'text-zinc-700 dark:text-zinc-400'}`}>
                             {t(`agent.tracking.statusLabels.${event.status}`)}
                           </p>
-                          <span className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500">{event.time}</span>
+                          <span className="text-[10px] font-mono text-zinc-500 dark:text-zinc-500">{event.time}</span>
                         </div>
                         <p className="text-zinc-600 dark:text-zinc-300 text-base mb-1 font-medium">{event.desc}</p>
                         <div className="flex items-center gap-1 text-[10px] text-blue-500/70 font-mono">

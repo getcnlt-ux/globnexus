@@ -97,7 +97,7 @@ export default function Navbar() {
               to={link.href}
               className={cn(
                 'text-sm font-medium transition-colors hover:text-blue-500',
-                location.pathname === link.href ? 'text-blue-500' : 'text-zinc-400'
+                location.pathname === link.href ? 'text-blue-500' : 'text-zinc-600 dark:text-zinc-400'
               )}
             >
               {link.name}
@@ -123,7 +123,7 @@ export default function Navbar() {
                 <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold text-white shadow-lg shadow-blue-600/20">
                   {profile.displayName?.charAt(0) || profile.email?.charAt(0).toUpperCase()}
                 </div>
-                <span className="text-xs font-bold text-zinc-100 hidden lg:block">
+                <span className="text-xs font-bold text-zinc-700 dark:text-zinc-100 hidden lg:block">
                   {profile.displayName || 'User'}
                 </span>
               </button>
@@ -137,12 +137,12 @@ export default function Navbar() {
                     className="absolute top-full right-0 mt-2 w-64 glass-panel rounded-2xl overflow-hidden py-2 shadow-2xl border-black/5 dark:border-white/10"
                   >
                     <div className="px-4 py-3 border-b border-black/5 dark:border-white/10 mb-2 bg-black/5 dark:bg-white/5">
-                       <p className="text-[10px] text-zinc-500 uppercase font-mono tracking-widest mb-1">{t('nav.account')}</p>
+                       <p className="text-[10px] text-zinc-600 dark:text-zinc-500 uppercase font-mono tracking-widest mb-1">{t('nav.account')}</p>
                        <p className="text-xs font-bold text-zinc-900 dark:text-white truncate mb-3">{profile.email}</p>
                        
-                       <p className="text-[10px] text-zinc-500 uppercase font-mono tracking-widest mb-1 font-black">{t('nav.myReferral')}</p>
+                       <p className="text-[10px] text-zinc-600 dark:text-zinc-500 uppercase font-mono tracking-widest mb-1 font-black">{t('nav.myReferral')}</p>
                        <div className="flex items-center gap-2 bg-zinc-100 dark:bg-black/40 border border-black/5 dark:border-white/5 p-1.5 rounded-lg">
-                         <span className="text-[9px] font-mono text-zinc-500 dark:text-zinc-400 truncate flex-grow">{referralLink}</span>
+                         <span className="text-[9px] font-mono text-zinc-700 dark:text-zinc-400 truncate flex-grow">{referralLink}</span>
                          <button 
                             onClick={copyReferralLink}
                             className="text-blue-500 hover:text-blue-400 p-1"
@@ -155,7 +155,7 @@ export default function Navbar() {
                       <Link 
                         to="/admin" 
                         onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-3 w-full px-4 py-2 text-xs font-bold text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+                        className="flex items-center gap-3 w-full px-4 py-2 text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                       >
                         <Settings className="w-4 h-4" />
                         {t('nav.adminPanel')}
@@ -164,7 +164,7 @@ export default function Navbar() {
                     <Link 
                       to="/referrals" 
                       onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-3 w-full px-4 py-2 text-xs font-bold text-zinc-400 hover:text-white hover:bg-white/5 transition-colors border-t border-white/5"
+                      className="flex items-center gap-3 w-full px-4 py-2 text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors border-t border-black/5 dark:border-white/5"
                     >
                       <Users className="w-4 h-4" />
                       {t('agent.dashboard')}
@@ -187,7 +187,7 @@ export default function Navbar() {
                   setAuthMode('login');
                   setAuthModalOpen(true);
                 }}
-                className="text-xs font-bold text-zinc-400 hover:text-white transition-colors px-2"
+                className="text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-white transition-colors px-2"
               >
                 {t('nav.login')}
               </button>

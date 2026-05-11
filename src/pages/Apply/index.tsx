@@ -223,7 +223,7 @@ function ServiceSelection({ onSelect }: { onSelect: (type: ServiceType) => void 
           </div>
           <div>
             <h3 className="font-bold text-lg">{s.label}</h3>
-            <p className="text-xs text-zinc-500">{s.desc}</p>
+            <p className="text-xs text-zinc-800 dark:text-zinc-500 font-bold">{s.desc}</p>
           </div>
         </button>
       ))}
@@ -352,7 +352,7 @@ function DetailedInput({ type, onBack, onSubmit }: { type: ServiceType, onBack: 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {currentFields.map((f: any) => (
           <div key={f.id} className={cn("space-y-2", f.type === 'textarea' || !f.half ? "md:col-span-2" : "")}>
-            <label className="text-xs font-mono text-zinc-400 uppercase tracking-widest flex items-center gap-2 font-black">
+            <label className="text-xs font-mono text-zinc-700 dark:text-zinc-400 uppercase tracking-widest flex items-center gap-2 font-black">
               {f.label}
               {f.required !== false && <span className="text-blue-500">*</span>}
             </label>
@@ -367,11 +367,11 @@ function DetailedInput({ type, onBack, onSubmit }: { type: ServiceType, onBack: 
                       "flex flex-col items-center justify-center p-3 rounded-xl border text-sm gap-2 transition-all",
                       data[f.id] === o.value
                         ? "bg-blue-600/10 border-blue-600 text-blue-400"
-                        : "bg-white/5 border-white/5 text-zinc-500 hover:border-white/20"
+                        : "bg-white/5 border-white/5 text-zinc-700 dark:text-zinc-500 hover:border-white/20"
                     )}
                   >
                     {o.icon}
-                    <span className="font-medium text-[10px] text-center leading-tight">{o.label || o.value}</span>
+                    <span className="font-bold text-[10px] text-center leading-tight">{o.label || o.value}</span>
                   </button>
                 ))}
               </div>
