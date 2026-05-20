@@ -102,7 +102,7 @@ service cloud.firestore {
         incoming().role == 'user' || 
         isSuperAdmin()
       );
-      allow update: if (isOwner(userId) && (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL']))) || 
+      allow update: if (isOwner(userId) && (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'referralCode']))) || 
                     isSuperAdmin() ||
                     (isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'email']) && incoming().role == existing().role);
       allow delete: if isSuperAdmin();

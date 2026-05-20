@@ -32,6 +32,39 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
     }
   }, [isOpen, initialMode]);
 
+  const getAuthErrorMessage = (err: any) => {
+    console.error('Firebase Auth Error Info:', err.code, err.message, err);
+    
+    switch (err.code) {
+      case 'auth/operation-not-allowed':
+        return `Firebase 인증 설정이 활성화되어 있지 않습니다.\n\n해결 방법:\n1. Firebase 콘솔(console.firebase.google.com)로 이동합니다.\n2. [Build] > [Authentication] > [Sign-in method] 메뉴로 이동합니다.\n3. '이메일/비밀번호' 및 'Google' 로그인 방식을 각각 활성화(Enable)해 주세요.`;
+      
+      case 'auth/unauthorized-domain':
+        return `현재 실행 중인 도메인이 Firebase 승인 목록에 없습니다.\n\n해결 방법:\n1. Firebase 콘솔로 이동합니다.\n2. [Build] > [Authentication] > [Settings] > [Authorized domains]로 이동합니다.\n3. 새 도메인으로 현재 도메인( ${window.location.hostname} )을 승인 도메인 목록에 추가해 주세요.`;
+
+      case 'auth/popup-blocked':
+        return '팝업창이 차단되었습니다. 브라우저 주소창 부분에서 팝업 차단을 해제한 후 다시 시도해 주세요.';
+        
+      case 'auth/cancelled-popup-request':
+        return '로그인 팝업 창이 닫혔습니다. 인증을 마칠 때까지 대기해 주세요.';
+        
+      case 'auth/email-already-in-use':
+        return '이미 등록되어 사용 중인 이메일입니다. 다른 이메일을 사용하거나 로그인을 시도해 주세요.';
+        
+      case 'auth/invalid-credential':
+        return '이메일 또는 비밀번호가 일치하지 않습니다. 입력한 정보가 올바른지 다시 확인해 주세요.';
+        
+      case 'auth/weak-password':
+        return '비밀번호가 너무 취약합니다. 문자, 숫자, 특수문자를 혼합하여 8자에서 15자 사이로 설정해 주세요.';
+
+      case 'auth/network-request-failed':
+        return '인터넷 연결이 원활하지 않거나 방화벽 문제로 인해 Firebase 서버에 연결할 수 없습니다.';
+        
+      default:
+        return `인증 중 오류가 발생했습니다:\n${err.message || '알 수 없는 오류'} (${err.code || '알 수 없는 코드'})`;
+    }
+  };
+
   const handleGoogleLogin = async () => {
     setError(null);
     setLoading(true);
@@ -40,14 +73,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
       await signInWithPopup(auth, provider);
       onClose();
     } catch (err: any) {
-      console.error('Google login error:', err);
-      if (err.code === 'auth/popup-blocked') {
-        setError('팝업이 차단되었습니다. 브라우저 설정에서 팝업 차단을 해제한 후 다시 시도해주세요.');
-      } else if (err.code === 'auth/cancelled-popup-request') {
-        setError('로그인 창이 닫혔습니다.');
-      } else {
-        setError('로그인 중 오류가 발생했습니다: ' + (err.message || '알 수 없는 오류'));
-      }
+      setError(getAuthErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -100,16 +126,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
       }
       onClose();
     } catch (err: any) {
-      console.error('Auth error:', err.code, err.message);
-      if (err.code === 'auth/email-already-in-use') {
-        setError('이미 사용 중인 이메일입니다.');
-      } else if (err.code === 'auth/invalid-credential') {
-        setError('이메일 또는 비밀번호가 일치하지 않습니다.');
-      } else if (err.code === 'auth/weak-password') {
-        setError('비밀번호가 너무 취약합니다.');
-      } else {
-        setError('인증 중 오류가 발생했습니다: ' + (err.message || '알 수 없는 오류'));
-      }
+      setError(getAuthErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -234,8 +251,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
               </div>
 
               {error && (
-                <div className="flex items-center gap-2 text-red-500 text-xs mt-2 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
-                  <AlertCircle size={14} />
+                <div className="flex items-start gap-2.5 text-red-500 text-[11px] mt-2 bg-red-500/10 p-3.5 rounded-2xl border border-red-500/20 text-left whitespace-pre-line leading-relaxed">
+                  <AlertCircle size={14} className="mt-0.5 shrink-0" />
                   <span>{error}</span>
                 </div>
               )}
