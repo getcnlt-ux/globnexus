@@ -14,7 +14,8 @@ import {
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../components/common/AuthProvider';
 import { cn } from '../../lib/utils';
-import { MessageCircle, Send, User, Clock, CheckCircle, Trash2 } from 'lucide-react';
+import { MessageCircle, Send, User, Clock, CheckCircle, Trash2, Languages } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface ChatSession {
   id: string;
@@ -35,11 +36,50 @@ interface Message {
 
 export default function AdminChatList() {
   const { user, profile } = useAuth();
+  const { i18n, t } = useTranslation();
   const [chats, setChats] = useState<ChatSession[]>([]);
   const [selectedChat, setSelectedChat] = useState<ChatSession | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [translatingIds, setTranslatingIds] = useState<Record<string, boolean>>({});
+
+  const handleTranslate = async (msgId: string, text: string, targetLang?: string) => {
+    if (translatingIds[msgId]) return;
+
+    // Toggle back to original if they clicked the main Translate button with translation already loaded
+    if (translations[msgId] && !targetLang) {
+      const updated = { ...translations };
+      delete updated[msgId];
+      setTranslations(updated);
+      return;
+    }
+
+    const finalTargetLang = targetLang || i18n.language || 'ko';
+    setTranslatingIds(prev => ({ ...prev, [msgId]: true }));
+    try {
+      const response = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text,
+          targetLang: finalTargetLang
+        })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTranslations(prev => ({ ...prev, [msgId]: data.translated }));
+      } else {
+        console.error('Translation error response');
+      }
+    } catch (err) {
+      console.error('Error translating:', err);
+    } finally {
+      setTranslatingIds(prev => ({ ...prev, [msgId]: false }));
+    }
+  };
 
   // Listen to all active chats
   useEffect(() => {
@@ -243,9 +283,43 @@ export default function AdminChatList() {
                           : "bg-zinc-800 text-zinc-200 rounded-tl-none border border-white/5"
                       )}
                     >
-                      {msg.text}
+                      <div>{msg.text}</div>
+                      {translations[msg.id] && (
+                        <div className="mt-2 pt-2 border-t border-white/10 text-xs text-blue-200/90 italic leading-relaxed">
+                          <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-1">Translated:</div>
+                          {translations[msg.id]}
+                        </div>
+                      )}
                     </div>
-                    <span className="text-[8px] text-zinc-700 mt-2 font-mono">
+
+                    {/* Translation Actions */}
+                    <div className="flex gap-2 items-center mt-1 text-[10px] text-zinc-500">
+                      <button 
+                        onClick={() => handleTranslate(msg.id, msg.text)} 
+                        className="hover:text-blue-400 font-semibold transition-colors flex items-center gap-1 cursor-pointer bg-transparent border-0 p-0 text-[10px]"
+                      >
+                        <Languages size={10} />
+                        {translatingIds[msg.id] ? '번역 중...' : (translations[msg.id] ? '원문 보기' : '번역')}
+                      </button>
+                      
+                      {!translations[msg.id] && !translatingIds[msg.id] && (
+                        <div className="flex gap-1.5 border-l border-white/10 pl-2">
+                          {['ko', 'en', 'zh', 'ja'].map((lang) => (
+                            <button
+                              key={lang}
+                              onClick={() => handleTranslate(msg.id, msg.text, lang)}
+                              className={cn(
+                                "hover:text-blue-400 font-mono transition-colors uppercase px-1 rounded hover:bg-white/5 text-[9px]",
+                                i18n.language === lang ? "text-blue-400 font-black font-semibold" : "text-zinc-500"
+                              )}
+                            >
+                              {lang}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-[8px] text-zinc-700 mt-1 font-mono">
                       {msg.createdAt?.toDate().toLocaleTimeString()}
                     </span>
                   </div>

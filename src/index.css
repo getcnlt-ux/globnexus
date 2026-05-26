@@ -22,9 +22,31 @@
     @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 font-sans antialiased selection:bg-blue-500/30 transition-colors duration-300;
   }
   
-  /* Improve visibility for small text globally */
+  /* Improve visibility for small text globally and make them 2px larger */
   .text-xs, .text-\[10px\], .text-\[9px\], .text-\[8px\] {
     @apply font-semibold dark:font-medium tracking-wide text-zinc-800 dark:text-zinc-400;
+  }
+
+  .text-xs {
+    font-size: 14px !important;
+  }
+  .text-\[8px\] {
+    font-size: 10px !important;
+  }
+  .text-\[9px\] {
+    font-size: 11px !important;
+  }
+  .text-\[10px\] {
+    font-size: 12px !important;
+  }
+  .text-\[11px\] {
+    font-size: 13px !important;
+  }
+  .text-\[12px\] {
+    font-size: 14px !important;
+  }
+  .text-\[13px\] {
+    font-size: 15px !important;
   }
 
   .text-zinc-600 {

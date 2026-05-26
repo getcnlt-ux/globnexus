@@ -104,7 +104,7 @@ export default function Navbar() {
             </Link>
           ))}
 
-          {profile?.role === 'admin' && (
+          {(profile?.role === 'admin' || profile?.role === 'super_admin') && (
             <Link
               to="/admin"
               className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-full text-xs font-black hover:bg-red-500 transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] animate-pulse border-2 border-red-400"
@@ -285,7 +285,7 @@ export default function Navbar() {
               </Link>
             ))}
             <div className="flex flex-col gap-2 pt-4 border-t border-white/10 mt-2">
-              {profile?.role === 'admin' && (
+              {(profile?.role === 'admin' || profile?.role === 'super_admin') && (
                 <Link
                   to="/admin"
                   onClick={() => setIsOpen(false)}

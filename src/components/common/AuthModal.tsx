@@ -88,9 +88,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
   };
 
   const validatePassword = (password: string) => {
-    // At least 8 and less than 16 characters, one letter, one number, and one special character
-    const re = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,15}$/;
-    return re.test(password);
+    // At least 6 characters (Firebase Authentication standard requirement)
+    return password.length >= 6;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -104,7 +103,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
         return;
       }
       if (!validatePassword(password)) {
-        setError('비밀번호는 8자 이상 16자 미만이며, 숫자와 특수문자를 포함해야 합니다.');
+        setError('비밀번호는 최소 6자 이상이어야 합니다.');
         return;
       }
       if (!displayName.trim()) {

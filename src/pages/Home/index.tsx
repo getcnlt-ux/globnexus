@@ -304,10 +304,10 @@ export default function Home() {
               transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
               className="absolute bottom-[10%] right-[5%] z-30"
             >
-              <Link to="/apply" className="glass-panel px-5 py-3 rounded-2xl flex items-center gap-3 backdrop-blur-xl border border-white/20 hover:border-blue-400/50 hover:bg-blue-500/10 transition-all group shadow-2xl">
+              <Link to="/apply" className="glass-panel px-5 py-3 rounded-2xl flex items-center gap-3 backdrop-blur-xl border border-black/5 dark:border-white/20 hover:border-indigo-400/50 hover:bg-indigo-500/10 transition-all group shadow-2xl">
                 <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                <Ship className="w-5 h-5 text-indigo-400 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-sans tracking-tight uppercase font-bold text-zinc-100 group-hover:text-white transition-colors">{t('home.oceanVessel')}</span>
+                <Ship className="w-5 h-5 text-indigo-500 dark:text-indigo-400 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-sans tracking-tight uppercase font-bold text-zinc-700 dark:text-zinc-100 group-hover:text-indigo-600 dark:group-hover:text-white transition-colors">{t('home.oceanVessel')}</span>
               </Link>
             </motion.div>
 
@@ -316,10 +316,10 @@ export default function Home() {
               transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
               className="absolute top-[15%] left-[-15%] z-30"
             >
-              <Link to="/apply" className="glass-panel px-5 py-3 rounded-2xl flex items-center gap-3 backdrop-blur-xl border border-white/20 hover:border-blue-400/50 hover:bg-blue-500/10 transition-all group shadow-2xl">
+              <Link to="/apply" className="glass-panel px-5 py-3 rounded-2xl flex items-center gap-3 backdrop-blur-xl border border-black/5 dark:border-white/20 hover:border-orange-400/50 hover:bg-orange-500/10 transition-all group shadow-2xl">
                 <div className="w-2 h-2 rounded-full bg-orange-500 animate-ping" />
-                <ShoppingCart className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-sans tracking-tight uppercase font-black text-zinc-100 group-hover:text-white transition-colors">{t('home.purchaseProxy')}</span>
+                <ShoppingCart className="w-5 h-5 text-orange-500 dark:text-orange-400 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-sans tracking-tight uppercase font-black text-zinc-700 dark:text-zinc-100 group-hover:text-orange-600 dark:group-hover:text-white transition-colors">{t('home.purchaseProxy')}</span>
               </Link>
             </motion.div>
 
@@ -328,10 +328,10 @@ export default function Home() {
               transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
               className="absolute top-[55%] left-[-18%] z-30"
             >
-              <Link to="/apply" className="glass-panel px-5 py-3 rounded-2xl flex items-center gap-3 backdrop-blur-xl border border-white/20 hover:border-blue-400/50 hover:bg-blue-500/10 transition-all group shadow-2xl">
+              <Link to="/apply" className="glass-panel px-5 py-3 rounded-2xl flex items-center gap-3 backdrop-blur-xl border border-black/5 dark:border-white/20 hover:border-purple-400/50 hover:bg-purple-500/10 transition-all group shadow-2xl">
                 <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-                <Truck className="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-sans tracking-tight uppercase font-black text-zinc-100 group-hover:text-white transition-colors">{t('home.logisticsProxy')}</span>
+                <Truck className="w-5 h-5 text-purple-500 dark:text-purple-400 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-sans tracking-tight uppercase font-black text-zinc-700 dark:text-zinc-100 group-hover:text-purple-600 dark:group-hover:text-white transition-colors">{t('home.logisticsProxy')}</span>
               </Link>
             </motion.div>
 
@@ -340,10 +340,10 @@ export default function Home() {
               transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 2.5 }}
               className="absolute bottom-[20%] left-[-12%] z-30"
             >
-              <Link to="/apply" className="glass-panel px-5 py-3 rounded-2xl flex items-center gap-3 backdrop-blur-xl border border-white/20 hover:border-cyan-400/50 hover:bg-cyan-500/10 transition-all group shadow-2xl">
+              <Link to="/apply" className="glass-panel px-5 py-3 rounded-2xl flex items-center gap-3 backdrop-blur-xl border border-black/5 dark:border-white/20 hover:border-cyan-400/50 hover:bg-cyan-500/10 transition-all group shadow-2xl">
                 <div className="w-2 h-2 rounded-full bg-cyan-500 animate-ping" />
-                <Factory className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-sans tracking-tight uppercase font-black text-zinc-100 group-hover:text-white transition-colors">{t('home.manufacturing')}</span>
+                <Factory className="w-5 h-5 text-cyan-500 dark:text-cyan-400 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-sans tracking-tight uppercase font-black text-zinc-700 dark:text-zinc-100 group-hover:text-cyan-600 dark:group-hover:text-white transition-colors">{t('home.manufacturing')}</span>
               </Link>
             </motion.div>
 
@@ -352,10 +352,10 @@ export default function Home() {
               transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
               className="absolute top-[45%] right-[-10%] z-30"
             >
-              <Link to="/apply" className="glass-panel px-5 py-3 rounded-2xl flex items-center gap-3 backdrop-blur-xl border border-white/20 hover:border-blue-400/50 hover:bg-blue-500/10 transition-all group shadow-2xl">
+              <Link to="/apply" className="glass-panel px-5 py-3 rounded-2xl flex items-center gap-3 backdrop-blur-xl border border-black/5 dark:border-white/20 hover:border-emerald-400/50 hover:bg-emerald-500/10 transition-all group shadow-2xl">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                <ShieldCheck className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-sans tracking-tight uppercase font-black text-zinc-100 group-hover:text-white transition-colors">{t('home.certification')}</span>
+                <ShieldCheck className="w-5 h-5 text-emerald-500 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-sans tracking-tight uppercase font-black text-zinc-700 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-white transition-colors">{t('home.certification')}</span>
               </Link>
             </motion.div>
 

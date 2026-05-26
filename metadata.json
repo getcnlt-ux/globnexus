@@ -2,5 +2,7 @@
   "name": "GlobNexus",
   "description": "Premium logistics and purchasing agency service featuring advanced control-center visualization and comprehensive application forms.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
