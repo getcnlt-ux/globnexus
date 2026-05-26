@@ -39,6 +39,74 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [translatingIds, setTranslatingIds] = useState<Record<string, boolean>>({});
 
+  const [chatbotActive, setChatbotActive] = useState(true);
+  const [isBotTyping, setIsBotTyping] = useState(false);
+
+  // Bot response function using the server API route
+  const getBotResponse = async (userText: string, currentMsgs: Message[]) => {
+    if (!chatId) return;
+    setIsBotTyping(true);
+    try {
+      const recentHistory = currentMsgs.map(m => ({
+        senderName: m.senderId === user?.uid ? 'User' : m.senderName || 'Agent/Chatbot',
+        text: m.text
+      }));
+      recentHistory.push({
+        senderName: 'User',
+        text: userText
+      });
+
+      const res = await fetch('/api/chatbot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: recentHistory })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        await addDoc(collection(db, 'chats', chatId, 'messages'), {
+          senderId: 'chatbot',
+          senderName: 'AI Chatbot (수행비서)',
+          text: data.reply,
+          createdAt: serverTimestamp()
+        });
+
+        await updateDoc(doc(db, 'chats', chatId), {
+          lastMessage: data.reply,
+          updatedAt: serverTimestamp()
+        });
+      }
+    } catch (err) {
+      console.error('Error getting bot response:', err);
+    } finally {
+      setIsBotTyping(false);
+    }
+  };
+
+  const handleQuickFAQClick = async (faqQuery: string) => {
+    if (!chatId || !user || isBotTyping) return;
+    
+    try {
+      // Save user message first
+      await addDoc(collection(db, 'chats', chatId, 'messages'), {
+        senderId: user.uid,
+        senderName: profile?.displayName || user.displayName || 'User',
+        text: faqQuery,
+        createdAt: serverTimestamp()
+      });
+
+      await updateDoc(doc(db, 'chats', chatId), {
+        lastMessage: faqQuery,
+        updatedAt: serverTimestamp()
+      });
+
+      // Get bot response immediately passing current history
+      await getBotResponse(faqQuery, messages);
+    } catch (err) {
+      console.error('Error sending FAQ query:', err);
+    }
+  };
+
   const handleTranslate = async (msgId: string, text: string, targetLang?: string) => {
     if (translatingIds[msgId]) return;
 
@@ -148,6 +216,11 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
         lastMessage: text,
         updatedAt: serverTimestamp()
       });
+
+      // If chatbot is active, generate auto response
+      if (chatbotActive) {
+        await getBotResponse(text, messages);
+      }
     } catch (err) {
       console.error('Error sending message:', err);
     }
@@ -170,7 +243,7 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="flex flex-col h-[500px] w-full bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+    <div className="flex flex-col h-[520px] w-full bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
       {/* Header */}
       <div className="bg-zinc-800 p-4 border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -190,6 +263,36 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
         </button>
       </div>
 
+      {/* Mode Switcher */}
+      <div className="bg-zinc-950/60 p-1.5 border-b border-white/5 flex gap-1.5 justify-center items-center">
+        <button
+          type="button"
+          onClick={() => setChatbotActive(true)}
+          className={cn(
+            "flex-1 py-1.5 px-2 rounded-lg text-[10.5px] font-bold transition-all flex items-center justify-center gap-1.5 border cursor-pointer",
+            chatbotActive 
+              ? "bg-blue-600/10 text-blue-400 border-blue-500/30 shadow-[0_0_8px_rgba(59,130,246,0.1)]" 
+              : "bg-transparent border-transparent text-zinc-500 hover:text-zinc-400"
+          )}
+        >
+          <div className={cn("w-1.5 h-1.5 rounded-full bg-blue-500", chatbotActive && "animate-pulse")} />
+          지능형 AI 챗봇 응대
+        </button>
+        <button
+          type="button"
+          onClick={() => setChatbotActive(false)}
+          className={cn(
+            "flex-1 py-1.5 px-2 rounded-lg text-[10.5px] font-bold transition-all flex items-center justify-center gap-1.5 border cursor-pointer",
+            !chatbotActive 
+              ? "bg-emerald-600/10 text-emerald-400 border-emerald-500/30 shadow-[0_0_8px_rgba(16,185,129,0.1)]" 
+              : "bg-transparent border-transparent text-zinc-500 hover:text-zinc-400"
+          )}
+        >
+          <div className={cn("w-1.5 h-1.5 rounded-full bg-emerald-500", !chatbotActive && "animate-pulse")} />
+          1:1 실시간 상담원
+        </button>
+      </div>
+
       {/* Messages */}
       <div className="flex-grow overflow-y-auto p-4 space-y-4 scrollbar-hide">
         {messages.map((msg) => (
@@ -201,14 +304,18 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
             )}
           >
             <span className="text-[9px] text-zinc-600 font-mono mb-1 uppercase tracking-widest">
-              {msg.senderId === user.uid ? 'You' : 'Agent ' + (msg.senderName || 'Staff')}
+              {msg.senderId === user.uid 
+                ? 'You' 
+                : (msg.senderId === 'chatbot' ? 'AI Chatbot (수행비서)' : 'Agent ' + (msg.senderName || 'Staff'))}
             </span>
             <div 
               className={cn(
                 "max-w-[80%] px-4 py-2 rounded-2xl text-sm leading-relaxed",
                 msg.senderId === user.uid 
                   ? "bg-blue-600 text-white rounded-tr-none" 
-                  : "bg-zinc-800 text-zinc-200 rounded-tl-none border border-white/5"
+                  : (msg.senderId === 'chatbot' 
+                      ? "bg-zinc-800 text-blue-100/90 rounded-tl-none border border-blue-500/15" 
+                      : "bg-zinc-800 text-zinc-200 rounded-tl-none border border-white/5")
               )}
             >
               <div>{msg.text}</div>
@@ -249,8 +356,47 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
             </div>
           </div>
         ))}
+        {isBotTyping && (
+          <div className="flex flex-col items-start gap-1">
+            <span className="text-[9px] text-zinc-600 font-mono uppercase tracking-widest">
+              AI Chatbot (수행비서)
+            </span>
+            <div className="max-w-[80%] px-4 py-2.5 rounded-2xl text-xs leading-relaxed bg-zinc-800 text-zinc-400 rounded-tl-none border border-blue-500/10 flex items-center gap-2">
+              <span>답변을 구성하는 중입니다</span>
+              <span className="flex gap-0.5">
+                <span className="w-1 h-1 rounded-full bg-blue-500 animate-bounce" />
+                <span className="w-1 h-1 rounded-full bg-blue-500 animate-bounce [animation-delay:0.2s]" />
+                <span className="w-1 h-1 rounded-full bg-blue-500 animate-bounce [animation-delay:0.4s]" />
+              </span>
+            </div>
+          </div>
+        )}
         <div ref={scrollRef} />
       </div>
+
+      {/* FAQ Chips */}
+      {chatbotActive && (
+        <div className="px-4 py-2 flex flex-wrap gap-1.5 border-t border-white/5 bg-zinc-950/40">
+          <span className="text-[10px] text-zinc-500 uppercase font-mono tracking-widest w-full">💡 자주 묻는 질문 빠른 응대</span>
+          {[
+            "해상 및 항공 운송 요율 안내",
+            "간편 신청서 및 견적 신청 방법",
+            "배송 완료까지 기간은 얼마나 걸리나요?",
+            "배송 상태 조회는 어디서 하나요?",
+            "시제품 제작 & 공장 매칭 문의"
+          ].map((faq) => (
+            <button
+              key={faq}
+              type="button"
+              onClick={() => handleQuickFAQClick(faq)}
+              disabled={isBotTyping}
+              className="text-[10px] bg-zinc-800 hover:bg-zinc-750 active:bg-blue-900/40 text-zinc-300 font-medium px-2.5 py-1 rounded-full border border-white/5 transition-all outline-none cursor-pointer duration-150"
+            >
+              {faq}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Input */}
       <form onSubmit={handleSendMessage} className="p-4 bg-zinc-800/50 border-t border-white/5">
@@ -259,7 +405,7 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder="Type your message..."
+            placeholder={chatbotActive ? "AI 챗봇에게 물어보세요..." : "Type your message..."}
             className="w-full bg-zinc-900 border border-white/10 rounded-xl py-3 pl-4 pr-12 text-sm focus:border-blue-500 outline-none transition-colors"
           />
           <button 
