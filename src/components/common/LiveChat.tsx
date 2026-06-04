@@ -67,6 +67,7 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
         await addDoc(collection(db, 'chats', chatId, 'messages'), {
           senderId: 'chatbot',
           senderName: 'AI Chatbot (수행비서)',
+          senderRole: 'chatbot',
           text: data.reply,
           createdAt: serverTimestamp()
         });
@@ -91,6 +92,7 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
       await addDoc(collection(db, 'chats', chatId, 'messages'), {
         senderId: user.uid,
         senderName: profile?.displayName || user.displayName || 'User',
+        senderRole: 'user',
         text: faqQuery,
         createdAt: serverTimestamp()
       });
@@ -220,6 +222,7 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
       await addDoc(collection(db, 'chats', chatId, 'messages'), {
         senderId: user.uid,
         senderName: profile?.displayName || user.displayName || 'User',
+        senderRole: 'user',
         text: text,
         createdAt: serverTimestamp()
       });
@@ -307,37 +310,39 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
 
       {/* Messages */}
       <div className="flex-grow overflow-y-auto p-4 space-y-4 scrollbar-hide">
-        {messages.map((msg) => (
-          <div 
-            key={msg.id}
-            className={cn(
-              "flex flex-col",
-              msg.senderId === user.uid ? "items-end" : "items-start"
-            )}
-          >
-            <span className="text-[9px] text-zinc-600 font-mono mb-1 uppercase tracking-widest">
-              {msg.senderId === user.uid 
-                ? 'You' 
-                : (msg.senderId === 'chatbot' ? 'AI Chatbot (수행비서)' : 'Agent ' + (msg.senderName || 'Staff'))}
-            </span>
+        {messages.map((msg) => {
+          const isSelf = msg.senderId === user.uid && msg.senderRole !== 'admin';
+          return (
             <div 
+              key={msg.id}
               className={cn(
-                "max-w-[80%] px-4 py-2 rounded-2xl text-sm leading-relaxed",
-                msg.senderId === user.uid 
-                  ? "bg-blue-600 text-white rounded-tr-none" 
-                  : (msg.senderId === 'chatbot' 
-                      ? "bg-zinc-800 text-blue-100/90 rounded-tl-none border border-blue-500/15" 
-                      : "bg-zinc-800 text-zinc-200 rounded-tl-none border border-white/5")
+                "flex flex-col",
+                isSelf ? "items-end" : "items-start"
               )}
             >
-              <div>{msg.text}</div>
-              {translations[msg.id] && (
-                <div className="mt-2 pt-2 border-t border-white/10 text-xs text-blue-200/90 italic leading-relaxed">
-                  <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-1">Translated:</div>
-                  {translations[msg.id].text}
-                </div>
-              )}
-            </div>
+              <span className="text-[9px] text-zinc-600 font-mono mb-1 uppercase tracking-widest">
+                {isSelf 
+                  ? 'You' 
+                  : (msg.senderId === 'chatbot' ? 'AI Chatbot (수행비서)' : 'Agent ' + (msg.senderName || 'Staff'))}
+              </span>
+              <div 
+                className={cn(
+                  "max-w-[80%] px-4 py-2 rounded-2xl text-sm leading-relaxed",
+                  isSelf 
+                    ? "bg-blue-600 text-white rounded-tr-none" 
+                    : (msg.senderId === 'chatbot' 
+                        ? "bg-zinc-800 text-blue-100/90 rounded-tl-none border border-blue-500/15" 
+                        : "bg-zinc-800 text-zinc-200 rounded-tl-none border border-white/5")
+                )}
+              >
+                <div>{msg.text}</div>
+                {translations[msg.id] && (
+                  <div className="mt-2 pt-2 border-t border-white/10 text-xs text-blue-200/90 italic leading-relaxed">
+                    <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-1">Translated:</div>
+                    {translations[msg.id].text}
+                  </div>
+                )}
+              </div>
 
             {/* Translation Actions */}
             <div className="flex gap-2 items-center mt-1 text-[10px] text-zinc-500">
@@ -369,7 +374,7 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
               )}
             </div>
           </div>
-        ))}
+        )})}
         {isBotTyping && (
           <div className="flex flex-col items-start gap-1">
             <span className="text-[9px] text-zinc-600 font-mono uppercase tracking-widest">

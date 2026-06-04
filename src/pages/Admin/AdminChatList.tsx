@@ -145,6 +145,7 @@ export default function AdminChatList() {
       await addDoc(collection(db, 'chats', selectedChat.id, 'messages'), {
         senderId: user.uid,
         senderName: profile?.displayName || 'Admin',
+        senderRole: 'admin',
         text: text,
         createdAt: serverTimestamp()
       });
@@ -278,27 +279,29 @@ export default function AdminChatList() {
               </div>
 
               <div className="flex-grow overflow-y-auto p-8 space-y-6 scrollbar-hide">
-                {messages.map((msg) => (
-                  <div 
-                    key={msg.id}
-                    className={cn(
-                      "flex flex-col",
-                      msg.senderId === user?.uid ? "items-end" : "items-start"
-                    )}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-[10px] text-zinc-600 font-mono uppercase tracking-widest">
-                        {msg.senderId === user?.uid ? 'Admin Response' : 'User Query'}
-                      </span>
-                    </div>
+                {messages.map((msg) => {
+                  const isAgent = msg.senderRole === 'admin' || msg.senderId === 'chatbot' || (msg.senderRole !== 'user' && msg.senderId !== selectedChat.userId);
+                  return (
                     <div 
+                      key={msg.id}
                       className={cn(
-                        "max-w-[70%] px-6 py-4 rounded-3xl text-sm leading-relaxed shadow-lg",
-                        msg.senderId === user?.uid 
-                          ? "bg-blue-600 text-white rounded-tr-none" 
-                          : "bg-zinc-800 text-zinc-200 rounded-tl-none border border-white/5"
+                        "flex flex-col",
+                        isAgent ? "items-end" : "items-start"
                       )}
                     >
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[10px] text-zinc-600 font-mono uppercase tracking-widest">
+                          {isAgent ? 'Admin Response' : 'User Query'}
+                        </span>
+                      </div>
+                      <div 
+                        className={cn(
+                          "max-w-[70%] px-6 py-4 rounded-3xl text-sm leading-relaxed shadow-lg",
+                          isAgent 
+                            ? "bg-blue-600 text-white rounded-tr-none" 
+                            : "bg-zinc-800 text-zinc-200 rounded-tl-none border border-white/5"
+                        )}
+                      >
                       <div>{msg.text}</div>
                       {translations[msg.id] && (
                         <div className="mt-2 pt-2 border-t border-white/10 text-xs text-blue-200/90 italic leading-relaxed">
@@ -341,7 +344,7 @@ export default function AdminChatList() {
                       {msg.createdAt?.toDate().toLocaleTimeString()}
                     </span>
                   </div>
-                ))}
+                )})}
                 <div ref={scrollRef} />
               </div>
 
