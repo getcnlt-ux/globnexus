@@ -75,7 +75,7 @@ service cloud.firestore {
 
     function isValidMessage(data) {
       return data.keys().hasAll(['senderId', 'text', 'createdAt']) &&
-             data.senderId == request.auth.uid &&
+             (data.senderId == request.auth.uid || data.senderId == 'chatbot') &&
              data.text is string && data.text.size() <= 2000 &&
              data.createdAt == request.time;
     }

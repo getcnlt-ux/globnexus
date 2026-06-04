@@ -204,11 +204,11 @@ export default function AdminChatList() {
             </div>
           ) : (
             chats.map((chat) => (
-              <button
+              <div
                 key={chat.id}
                 onClick={() => setSelectedChat(chat)}
                 className={cn(
-                  "w-full p-6 border-b border-white/5 text-left transition-all hover:bg-white/5",
+                  "w-full p-6 border-b border-white/5 text-left transition-all hover:bg-white/5 cursor-pointer block",
                   selectedChat?.id === chat.id ? "bg-blue-600/10 border-l-4 border-l-blue-600" : ""
                 )}
               >
@@ -242,7 +242,7 @@ export default function AdminChatList() {
                     <span className="text-[10px] text-zinc-600 font-mono">ID: {chat.id.slice(0, 6)}</span>
                   </div>
                 </div>
-              </button>
+              </div>
             ))
           )}
         </div>
