@@ -139,14 +139,7 @@ export default function ConsultationWidget() {
       {/* Live Chat Panel */}
       <AnimatePresence>
         {showLiveChat && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="absolute bottom-20 right-0 w-[350px] md:w-[400px] z-[1100]"
-          >
-             <LiveChat onClose={() => setShowLiveChat(false)} />
-          </motion.div>
+          <LiveChat onClose={() => setShowLiveChat(false)} />
         )}
       </AnimatePresence>
 

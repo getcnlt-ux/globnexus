@@ -63,9 +63,29 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["trackingNumber", "currentStep", "updatedAt"]
+    },
+    "Rate": {
+      "title": "Rate Settings",
+      "description": "Logistics rates, proxy fees, and transit times per country/type",
+      "type": "object",
+      "properties": {
+        "country": { "type": "string" },
+        "type": { "type": "string", "enum": ["Air", "Sea"] },
+        "freightRate": { "type": "string" },
+        "proxyFee": { "type": "string" },
+        "transitTime": { "type": "string" },
+        "remarks": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "updatedBy": { "type": "string" }
+      },
+      "required": ["country", "type", "freightRate", "proxyFee", "transitTime", "updatedAt"]
     }
   },
   "firestore": {
+    "/rates/{rateId}": {
+      "schema": "Rate",
+      "description": "Rate settings per country and type"
+    },
     "/shipments/{shipmentId}": {
       "schema": "Shipment",
       "description": "Logistics tracking records"

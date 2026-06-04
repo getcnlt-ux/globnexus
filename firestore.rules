@@ -87,7 +87,23 @@ service cloud.firestore {
              data.updatedAt == request.time;
     }
 
+    function isValidRate(data) {
+      return data.keys().hasAll(['country', 'type', 'freightRate', 'proxyFee', 'transitTime', 'updatedAt']) &&
+             data.country is string && data.country.size() <= 100 &&
+             data.type in ['Air', 'Sea'] &&
+             data.freightRate is string && data.freightRate.size() <= 500 &&
+             data.proxyFee is string && data.proxyFee.size() <= 200 &&
+             data.transitTime is string && data.transitTime.size() <= 200 &&
+             (!('remarks' in data) || data.remarks is string) &&
+             data.updatedAt == request.time;
+    }
+
     // --- Match Rules ---
+
+    match /rates/{rateId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidRate(incoming());
+    }
 
     match /shipments/{shipId} {
       allow list: if true; // Publicly searchable by trackingNumber

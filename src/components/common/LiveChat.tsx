@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, X, User, MessageCircle, AlertCircle, Languages } from 'lucide-react';
+import { Send, X, User, MessageCircle, AlertCircle, Languages, Maximize2, Minimize2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { 
   collection, 
@@ -41,6 +41,18 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
 
   const [chatbotActive, setChatbotActive] = useState(true);
   const [isBotTyping, setIsBotTyping] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [rates, setRates] = useState<any[]>([]);
+
+  // Fetch rate configuration from Firestore
+  useEffect(() => {
+    const q = query(collection(db, 'rates'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const docs = snapshot.docs.map(doc => doc.data());
+      setRates(docs);
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Bot response function using the server API route
   const getBotResponse = async (userText: string, currentMsgs: Message[]) => {
@@ -59,7 +71,10 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
       const res = await fetch('/api/chatbot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: recentHistory })
+        body: JSON.stringify({ 
+          messages: recentHistory,
+          rates: rates
+        })
       });
 
       if (res.ok) {
@@ -208,7 +223,12 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
 
   // Scroll to bottom
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
   }, [messages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -241,42 +261,65 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
     }
   };
 
-  if (!user) {
-    return (
-      <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center bg-zinc-900 border border-white/10 rounded-2xl">
-        <AlertCircle className="w-12 h-12 text-blue-500 mb-4" />
-        <h3 className="text-xl font-bold mb-2">Login Required</h3>
-        <p className="text-zinc-500 text-sm mb-6">Please sign in to start a live chat with our team.</p>
-        <button 
-          onClick={onClose}
-          className="bg-blue-600 px-6 py-2 rounded-full font-bold text-sm"
-        >
-          Confirm
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col h-[520px] w-full bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
-      {/* Header */}
-      <div className="bg-zinc-800 p-4 border-b border-white/5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500">
-            <MessageCircle size={18} />
-          </div>
-          <div>
-            <h4 className="text-sm font-bold">Global Logistics Support</h4>
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[10px] text-zinc-500 uppercase font-mono">Live Specialist Online</span>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95, y: 20 }}
+      className={cn(
+        "fixed flex flex-col bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 z-[1100]",
+        isExpanded
+          ? "inset-4 md:inset-auto md:bottom-28 md:right-8 md:w-[750px] md:h-[750px] md:max-h-[85vh]"
+          : "bottom-28 right-8 w-[92vw] sm:w-[420px] md:w-[480px] h-[580px] max-h-[80vh]"
+      )}
+    >
+      {!user ? (
+        <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center bg-zinc-900">
+          <AlertCircle className="w-12 h-12 text-blue-500 mb-4" />
+          <h3 className="text-xl font-bold mb-2">Login Required</h3>
+          <p className="text-zinc-500 text-sm mb-6">Please sign in to start a live chat with our team.</p>
+          <button 
+            onClick={onClose}
+            className="bg-blue-600 px-6 py-2 rounded-full font-bold text-sm"
+          >
+            Confirm
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* Header */}
+          <div className="bg-zinc-800 p-4 border-b border-white/5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500">
+                <MessageCircle size={18} />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold">Global Logistics Support</h4>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  <span className="text-[10px] text-zinc-500 uppercase font-mono animate-pulse">Live Specialist Online</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-1">
+              <button 
+                type="button"
+                onClick={() => setIsExpanded(!isExpanded)} 
+                className="text-zinc-500 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                title={isExpanded ? "축소하기" : "확대하기"}
+              >
+                {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+              </button>
+              <button 
+                type="button"
+                onClick={onClose} 
+                className="text-zinc-500 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
             </div>
           </div>
-        </div>
-        <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors">
-          <X size={20} />
-        </button>
-      </div>
 
       {/* Mode Switcher */}
       <div className="bg-zinc-950/60 p-1.5 border-b border-white/5 flex gap-1.5 justify-center items-center">
@@ -309,7 +352,7 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* Messages */}
-      <div className="flex-grow overflow-y-auto p-4 space-y-4 scrollbar-hide">
+      <div ref={scrollRef} className="flex-grow overflow-y-auto p-4 space-y-4 scrollbar-hide">
         {messages.map((msg) => {
           const isSelf = msg.senderId === user.uid && msg.senderRole !== 'admin';
           return (
@@ -390,7 +433,6 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
             </div>
           </div>
         )}
-        <div ref={scrollRef} />
       </div>
 
       {/* FAQ Chips */}
@@ -435,6 +477,8 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
           </button>
         </div>
       </form>
-    </div>
+        </>
+      )}
+    </motion.div>
   );
 }

@@ -2,7 +2,7 @@ import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 
 dotenv.config();
 
@@ -44,25 +44,27 @@ async function startServer() {
 
       const langName = languageMap[targetLang] || targetLang || "English";
 
-      const prompt = `You are a logistics expert and real-time support chat translator.
-Task: Detect the language of the source text first.
-If the detected language is already ${langName} (or if the source text is written in ${langName}):
-- If ${langName} is "Korean", please translate the text into "English".
-- If ${langName} is anything else (such as "English", "Chinese (Simplified)", or "Japanese"), please translate the text into "Korean".
-Otherwise:
-- Translate the text into ${langName}.
-
+      const systemInstruction = `You are a professional logistics real-time chat translator.
+      
 Rules:
-1. Preserve technical logistical terms, tracking numbers, customer names, ship/vessel names, or container numbers exactly as they are.
-2. Maintain the exact emotional tone (professional, polite, helpful).
-3. Return ONLY the translated text itself. Do not include any meta-text, quotes, explanations, language code prefixes, markdown, or translator notes.
-
-Message to translate:
-${text}`;
+1. Translate the user message to ${langName}.
+2. If the message is already written in ${langName}:
+   - If ${langName} is "Korean", select the target language as "English" and translate to English instead.
+   - If ${langName} is anything else, translate to "Korean" instead.
+3. Preserve technical logistical terms, tracking numbers, names, ship names, container numbers, or custom IDs exactly as they are.
+4. Maintain the exact tone (polite, professional, or helpful).
+5. IMPORTANT: Output ONLY the direct translated text. Do not include any notes, explanations, markdown, quotes, translation prefixes, or text of any kind other than the direct translation.`;
 
       const response = await ai.models.generateContent({
         model: "gemini-3.5-flash",
-        contents: prompt,
+        contents: text,
+        config: {
+          systemInstruction,
+          temperature: 0.1,
+          thinkingConfig: {
+            thinkingLevel: ThinkingLevel.MINIMAL
+          }
+        }
       });
 
       const translated = response.text || "";
@@ -75,7 +77,7 @@ ${text}`;
 
   // API Route for AI Chatbot response
   app.post("/api/chatbot", async (req, res) => {
-    const { messages } = req.body;
+    const { messages, rates } = req.body;
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({ error: "Messages array is required." });
     }
@@ -85,6 +87,21 @@ ${text}`;
     }
 
     try {
+      // Build dynamic rates context
+      let ratesContext = "현재 등록된 개별 국가별 세부 요율 고시가 없습니다. 기본적인 표준 기간(항공 3-5일, 해상 10-20일)을 안내해 주세요.";
+      if (rates && Array.isArray(rates) && rates.length > 0) {
+        ratesContext = "관리자가 공식 설정한 국가별 실시간 항공/해상 운임 요율 및 구매대행 요수수료, 운송 소요 일반 기준 데이터입니다:\n";
+        rates.forEach((r: any) => {
+          ratesContext += `- 국가: ${r.country || "미지정"} (${r.type === 'Air' ? '항공 Express' : '해상 Cargo'})\n`;
+          ratesContext += `  * 기본 운임 요율: ${r.freightRate || "별도 의뢰"}\n`;
+          ratesContext += `  * 구매대행 서비스 대행 요율/수수료: ${r.proxyFee || "건당 협의"}\n`;
+          ratesContext += `  * 운송 소요 기간: ${r.transitTime || "3-5 영업일"}\n`;
+          if (r.remarks) {
+            ratesContext += `  * 특이사항/원가기준: ${r.remarks}\n`;
+          }
+        });
+      }
+
       // Create chat history context
       const historyText = messages.map((m: any) => `${m.senderName}: ${m.text}`).join("\n");
 
@@ -100,17 +117,22 @@ About Global Nexis (글로벌 넥시스):
    - 수입 통관 및 배송 대행 (Logistics Proxy)
    - 시제품 제작 & 공장 연결 (Prototyping & OEM/ODM Manufacturing)
    - 국내외 품질/공급망 인증 (Supply Chain & Product Certification)
-2. Shipping Times:
-   - 항공 특송: 국외 물품 접수 후 약 3-5 영업일 이내 신속 수동 배송 완료.
-   - 해상 화물: 지역 및 입고 상황에 따라 약 10-20 영업일 소요.
-3. Quotation / Inquiries (견적안내):
+
+2. 실시간 국가별 운송요율 및 운송 기간 고시 기준 (★최우선 답변 기준★):
+${ratesContext}
+
+3. 일반적인 배송 소요 및 단가 안내 지침:
+   - 위 실시간 국가별 고시 데이터에 언급된 국가가 있는 경우 해당 요율(운임, 수수료, 기간)을 절대적인 기준으로 친절하고 정밀하게 산출하여 신뢰성 있게 답변하세요.
+   - 만약 위 테이블에 명시되지 않은 기타 국가나 형태의 경우, 항공 특용은 "영업일 3~5일", 해상 화물은 "영업일 10~20일" 정도 소요됨을 일반적으로 안내하고 상세한 것은 "신청하기(Apply)" 탭을 통해 간편하게 맞춤 신청서를 접수하면 밀착 정밀 견적을 별도 제공한다는 점을 친절히 유도하십시오.
+
+4. Quotation / Inquiries (견적안내):
    - 상단 메뉴의 "신청하기 (Apply)" 메뉴에서 간편하고 상세하게 맞춤 신청서를 작성하면, 담당 매니저가 무료 밀착 견적을 산출하여 실시간 알림을 보냅니다.
-4. Logistics Tracking (실시간 배송조회):
+5. Logistics Tracking (실시간 배송조회):
    - 상단 메뉴의 "배송조회 (Tracking)" 탭에 본인의 화물 운송장 번호나 인콰이어리 ID를 입력하여 즉시 위치를 파악할 수 있습니다.
 
 Formatting & Tone Guidelines:
 - Write in elegant, clear, structured Korean (or English if the user writes in English).
-- Use lists, bold terms, and beautiful unicode icons where relevant to make the text beautiful and fast to read (since small text size adjustments are active, spacing and structure are crucial).
+- Use list, bold terms, and beautiful unicode icons where relevant to make the text beautiful and fast to read.
 - Be extremely polite, professional, and business-focused.
 - Keep the response concise enough for real-time mobile/desktop chat windows (typically 2-4 structured paragraphs, no longer than 250 words unless highly specific details are requested).`;
 

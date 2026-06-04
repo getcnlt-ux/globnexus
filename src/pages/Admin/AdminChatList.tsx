@@ -131,7 +131,12 @@ export default function AdminChatList() {
 
   // Scroll to bottom
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
   }, [messages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -278,7 +283,7 @@ export default function AdminChatList() {
                 </button>
               </div>
 
-              <div className="flex-grow overflow-y-auto p-8 space-y-6 scrollbar-hide">
+              <div ref={scrollRef} className="flex-grow overflow-y-auto p-8 space-y-6 scrollbar-hide">
                 {messages.map((msg) => {
                   const isAgent = msg.senderRole === 'admin' || msg.senderId === 'chatbot' || (msg.senderRole !== 'user' && msg.senderId !== selectedChat.userId);
                   return (
@@ -345,7 +350,6 @@ export default function AdminChatList() {
                     </span>
                   </div>
                 )})}
-                <div ref={scrollRef} />
               </div>
 
               <form onSubmit={handleSendMessage} className="p-6 border-t border-white/5 bg-white/5">

@@ -19,13 +19,15 @@ import {
   Lock,
   MessageCircle, 
   Share2,
-  Trash2
+  Trash2,
+  Globe
 } from 'lucide-react';
 import { collection, query, onSnapshot, orderBy, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import AdminChatList from './AdminChatList';
 import UserManager from './UserManager';
 import LogisticsManager from './LogisticsManager';
+import RateManager from './RateManager';
 import { Users } from 'lucide-react';
 
 const statusConfig: Record<ConsultationStatus, { label: string, color: string, icon: any }> = {
@@ -49,7 +51,7 @@ export default function Admin() {
   const { profile, loading: authLoading } = useAuth();
   const [data, setData] = useState<any[]>([]);
   const [filter, setFilter] = useState<ConsultationStatus | 'all'>('all');
-  const [view, setView] = useState<'consultations' | 'chats' | 'users' | 'logistics'>('consultations');
+  const [view, setView] = useState<'consultations' | 'chats' | 'users' | 'logistics' | 'rates'>('consultations');
 
   useEffect(() => {
     if (profile?.role !== 'admin' && profile?.role !== 'super_admin') return;
@@ -146,6 +148,16 @@ export default function Admin() {
               >
                 <MessageCircle size={18} />
                 실시간 채팅 관리
+              </button>
+              <button 
+                onClick={() => setView('rates')}
+                className={cn(
+                  "flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all border",
+                  view === 'rates' ? "bg-blue-600 border-blue-600 text-white" : "bg-white/5 border-white/10 hover:border-white/20 text-zinc-400"
+                )}
+              >
+                <Globe size={18} />
+                포워딩 / 구매대행 요율 관리
               </button>
               {profile?.role === 'super_admin' && (
                 <button 
@@ -266,6 +278,8 @@ export default function Admin() {
           <AdminChatList />
         ) : view === 'logistics' ? (
           <LogisticsManager />
+        ) : view === 'rates' ? (
+          <RateManager />
         ) : (
           <UserManager />
         )}
