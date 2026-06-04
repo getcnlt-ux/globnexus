@@ -36,7 +36,7 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
   const [chatId, setChatId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [translations, setTranslations] = useState<Record<string, { text: string; lang: string }>>({});
   const [translatingIds, setTranslatingIds] = useState<Record<string, boolean>>({});
 
   const [chatbotActive, setChatbotActive] = useState(true);
@@ -119,6 +119,15 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
     }
 
     const finalTargetLang = targetLang || i18n.language || 'ko';
+
+    // Toggle back to original if they clicked the same language again
+    if (translations[msgId] && translations[msgId].lang === finalTargetLang) {
+      const updated = { ...translations };
+      delete updated[msgId];
+      setTranslations(updated);
+      return;
+    }
+
     setTranslatingIds(prev => ({ ...prev, [msgId]: true }));
     try {
       const response = await fetch('/api/translate', {
@@ -131,7 +140,10 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
       });
       if (response.ok) {
         const data = await response.json();
-        setTranslations(prev => ({ ...prev, [msgId]: data.translated }));
+        setTranslations(prev => ({ 
+          ...prev, 
+          [msgId]: { text: data.translated, lang: finalTargetLang } 
+        }));
       } else {
         console.error('Translation error response');
       }
@@ -322,7 +334,7 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
               {translations[msg.id] && (
                 <div className="mt-2 pt-2 border-t border-white/10 text-xs text-blue-200/90 italic leading-relaxed">
                   <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-1">Translated:</div>
-                  {translations[msg.id]}
+                  {translations[msg.id].text}
                 </div>
               )}
             </div>
@@ -337,15 +349,17 @@ export default function LiveChat({ onClose }: { onClose: () => void }) {
                 {translatingIds[msg.id] ? '번역 중...' : (translations[msg.id] ? '원문 보기' : '번역')}
               </button>
               
-              {!translations[msg.id] && !translatingIds[msg.id] && (
+              {!translatingIds[msg.id] && (
                 <div className="flex gap-1.5 border-l border-white/10 pl-2">
                   {['ko', 'en', 'zh', 'ja'].map((lang) => (
                     <button
                       key={lang}
                       onClick={() => handleTranslate(msg.id, msg.text, lang)}
                       className={cn(
-                        "hover:text-blue-400 font-mono transition-colors uppercase px-1 rounded hover:bg-white/5 text-[9px]",
-                        i18n.language === lang ? "text-blue-400 font-black font-semibold" : "text-zinc-500"
+                        "hover:text-blue-400 font-mono transition-colors uppercase px-1 py-0.5 rounded hover:bg-white/5 text-[9px]",
+                        translations[msg.id]?.lang === lang 
+                          ? "text-blue-400 font-semibold bg-blue-500/15 border border-blue-500/20" 
+                          : "text-zinc-500"
                       )}
                     >
                       {lang}

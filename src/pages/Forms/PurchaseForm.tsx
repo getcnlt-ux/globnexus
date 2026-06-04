@@ -157,7 +157,7 @@ export default function PurchaseForm() {
           <div className="bg-zinc-100 dark:bg-zinc-900 p-8 rounded-3xl border border-black/5 dark:border-white/5">
             <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-4">
               <CheckCircle size={16} />
-              <span className="text-xs font-bold uppercase tracking-widest">GlobLogix Benefit</span>
+              <span className="text-xs font-bold uppercase tracking-widest">Global Nexis Benefit</span>
             </div>
             <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed italic">
               "우리는 단순한 구매를 넘어 비즈니스의 성공을 위한 파트너가 됩니다. 중국 현지 인프라를 활용하여 최상의 품질을 보장합니다."

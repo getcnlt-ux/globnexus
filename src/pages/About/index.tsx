@@ -161,7 +161,7 @@ export default function About() {
         </div>
       </section>
 
-      {/* 3. KEY STRENGTHS: Why Globridge? */}
+      {/* 3. KEY STRENGTHS: Why Global Nexis? */}
       <section className="py-40 px-6 relative">
         <div className="absolute top-1/2 right-0 w-96 h-96 bg-blue-600/5 blur-[150px] rounded-full pointer-events-none" />
         

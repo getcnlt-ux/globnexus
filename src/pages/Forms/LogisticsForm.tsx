@@ -143,7 +143,7 @@ export default function LogisticsForm() {
               안전한 신청
             </h3>
             <p className="text-zinc-400 text-sm leading-relaxed mb-6">
-              GlobLogix Robotics는 고도의 보안 시스템을 통해 고객님의 화물 정보를 관리합니다. 모든 정보는 암호화되어 전송됩니다.
+              Global Nexis는 고도의 보안 시스템을 통해 고객님의 화물 정보를 관리합니다. 모든 정보는 암호화되어 전송됩니다.
             </p>
             <div className="p-4 bg-zinc-100 dark:bg-zinc-900/50 rounded-xl border border-black/5 dark:border-white/5 space-y-3">
               <div className="flex items-center gap-3 text-xs text-zinc-500">

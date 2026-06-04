@@ -85,7 +85,7 @@ export default function Navbar() {
             <Plane className="w-8 h-8 text-blue-500" />
           </motion.div>
           <span className="font-display font-bold text-xl tracking-tighter uppercase">
-            Globridge <span className="text-blue-500 italic">Control</span>
+            Global Nexis <span className="text-blue-500 italic">Control</span>
           </span>
         </Link>
 
