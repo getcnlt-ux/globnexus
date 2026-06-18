@@ -61,9 +61,6 @@ Rules:
         config: {
           systemInstruction,
           temperature: 0.1,
-          thinkingConfig: {
-            thinkingLevel: ThinkingLevel.MINIMAL
-          }
         }
       });
 
