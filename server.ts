@@ -84,21 +84,25 @@ async function startServer() {
         ko: "Korean",
         en: "English",
         zh: "Chinese (Simplified)",
+        "zh-CN": "Chinese (Simplified)",
+        "zh-TW": "Chinese (Traditional)",
         ja: "Japanese"
       };
 
       const langName = languageMap[targetLang] || targetLang || "English";
 
-      const systemInstruction = `You are a professional logistics real-time chat translator.
-      
-Rules:
-1. Translate the user message to ${langName}.
-2. If the message is already written in ${langName}:
-   - If ${langName} is "Korean", select the target language as "English" and translate to English instead.
-   - If ${langName} is anything else, translate to "Korean" instead.
-3. Preserve technical logistical terms, tracking numbers, names, ship names, container numbers, or custom IDs exactly as they are.
-4. Maintain the exact tone (polite, professional, or helpful).
-5. IMPORTANT: Output ONLY the direct translated text. Do not include any notes, explanations, markdown, quotes, translation prefixes, or text of any kind other than the direct translation.`;
+      const systemInstruction = `You are a highly accurate real-time logistics chat translator.
+
+Your single task is to translate the user's input text to the requested target language: "${langName}".
+
+Strict Guidelines:
+1. Translate the input text directly and naturally into ${langName}.
+2. If the input text is already in ${langName} (or extremely similar), translate it to:
+   - "English" (if ${langName} is "Korean")
+   - "Korean" (if ${langName} is "English", "Chinese (Simplified)", "Chinese (Traditional)", or "Japanese")
+3. Always preserve technical logistics codes, tracking numbers, container IDs, vessel/ship names, or URLs exactly without modification.
+4. Maintain a helpful and polite professional tone.
+5. Provide ONLY the final translated text. Do not include any explanations, introduction, markdown quotes, formatting, or translation prefixes.`;
 
       const response = await generateContentWithFallback({
         contents: text,
