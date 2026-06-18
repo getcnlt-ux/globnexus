@@ -45,6 +45,7 @@ export default function AdminChatList() {
 
   const [translations, setTranslations] = useState<Record<string, { text: string; lang: string }>>({});
   const [translatingIds, setTranslatingIds] = useState<Record<string, boolean>>({});
+  const [translationCache, setTranslationCache] = useState<Record<string, Record<string, string>>>({});
 
   const handleTranslate = async (msgId: string, text: string, targetLang?: string) => {
     if (translatingIds[msgId]) return;
@@ -67,6 +68,15 @@ export default function AdminChatList() {
       return;
     }
 
+    // High performance cache check for instantaneous switching
+    if (translationCache[msgId]?.[finalTargetLang]) {
+      setTranslations(prev => ({
+        ...prev,
+        [msgId]: { text: translationCache[msgId][finalTargetLang], lang: finalTargetLang }
+      }));
+      return;
+    }
+
     setTranslatingIds(prev => ({ ...prev, [msgId]: true }));
     try {
       const response = await fetch('/api/translate', {
@@ -79,9 +89,19 @@ export default function AdminChatList() {
       });
       if (response.ok) {
         const data = await response.json();
+        const translatedText = data.translated || "";
+
+        // Update both cache and active view state
+        setTranslationCache(prev => ({
+          ...prev,
+          [msgId]: {
+            ...(prev[msgId] || {}),
+            [finalTargetLang]: translatedText
+          }
+        }));
         setTranslations(prev => ({ 
           ...prev, 
-          [msgId]: { text: data.translated, lang: finalTargetLang } 
+          [msgId]: { text: translatedText, lang: finalTargetLang } 
         }));
       } else {
         console.error('Translation error response');
@@ -326,24 +346,28 @@ export default function AdminChatList() {
                         {translatingIds[msg.id] ? '번역 중...' : (translations[msg.id] ? '원문 보기' : '번역')}
                       </button>
                       
-                      {!translatingIds[msg.id] && (
-                        <div className="flex gap-1.5 border-l border-white/10 pl-2">
-                          {['ko', 'en', 'zh', 'ja'].map((lang) => (
-                            <button
-                              key={lang}
-                              onClick={() => handleTranslate(msg.id, msg.text, lang)}
-                              className={cn(
-                                "hover:text-blue-400 font-mono transition-colors uppercase px-1 py-0.5 rounded hover:bg-white/5 text-[9px]",
-                                translations[msg.id]?.lang === lang 
-                                  ? "text-blue-400 font-semibold bg-blue-500/15 border border-blue-500/20" 
-                                  : "text-zinc-500"
-                              )}
-                            >
-                              {lang}
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                      <div 
+                        className={cn(
+                          "flex gap-1.5 border-l border-white/10 pl-2 transition-opacity duration-200",
+                          translatingIds[msg.id] ? "opacity-40 pointer-events-none" : ""
+                        )}
+                      >
+                        {['ko', 'en', 'zh', 'ja'].map((lang) => (
+                          <button
+                            key={lang}
+                            disabled={translatingIds[msg.id]}
+                            onClick={() => handleTranslate(msg.id, msg.text, lang)}
+                            className={cn(
+                              "hover:text-blue-400 font-mono transition-colors uppercase px-1 py-0.5 rounded hover:bg-white/5 text-[9px]",
+                              translations[msg.id]?.lang === lang 
+                                ? "text-blue-400 font-semibold bg-blue-500/15 border border-blue-500/20" 
+                                : "text-zinc-500"
+                            )}
+                          >
+                            {lang}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                     <span className="text-[8px] text-zinc-700 mt-1 font-mono">
                       {msg.createdAt?.toDate().toLocaleTimeString()}

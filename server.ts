@@ -17,6 +17,51 @@ const ai = apiKey ? new GoogleGenAI({
   }
 }) : null;
 
+// Fail-safe helper function to generate content with automatic retries and model fallbacks (e.g. handling 503 UNAVAILABLE or peak spikes)
+async function generateContentWithFallback(params: {
+  contents: any;
+  config?: any;
+}) {
+  if (!ai) {
+    throw new Error("Gemini API client is not initialized.");
+  }
+  const models = ["gemini-3.5-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
+  let lastError = null;
+
+  for (const model of models) {
+    try {
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const response = await ai.models.generateContent({
+            model,
+            contents: params.contents,
+            config: params.config,
+          });
+          return response;
+        } catch (err: any) {
+          lastError = err;
+          const errString = String(err.message || "").toLowerCase();
+          const isTransient = errString.includes("503") || 
+                              errString.includes("unavailable") || 
+                              errString.includes("demand") || 
+                              errString.includes("429") || 
+                              errString.includes("resource_exhausted") || 
+                              err.status === 503 || 
+                              err.status === 429;
+          if (!isTransient || attempt === 2) {
+            break;
+          }
+          // Briefly wait before retry
+          await new Promise(resolve => setTimeout(resolve, 300 * attempt));
+        }
+      }
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError;
+}
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -55,8 +100,7 @@ Rules:
 4. Maintain the exact tone (polite, professional, or helpful).
 5. IMPORTANT: Output ONLY the direct translated text. Do not include any notes, explanations, markdown, quotes, translation prefixes, or text of any kind other than the direct translation.`;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+      const response = await generateContentWithFallback({
         contents: text,
         config: {
           systemInstruction,
@@ -139,8 +183,7 @@ ${historyText}
 
 Please reply to the customer's last message as the "Global Nexis Smart AI Support AI". Respond with high professionalism, in the same language of the last message. If the user greets you, introduce yourself with a premium greeting. Write ONLY your next reply message. Do not quote yourself or include prefixes like "AI Robot:" or anything else in the start of the text.`;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+      const response = await generateContentWithFallback({
         contents: prompt,
         config: {
           systemInstruction,
