@@ -6,25 +6,33 @@ import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 
 dotenv.config();
 
-// Create Gemini client with lazy capability check
-const apiKey = process.env.GEMINI_API_KEY;
-const ai = apiKey ? new GoogleGenAI({
-  apiKey,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    }
+// Create Gemini client dynamically with lazy capability check
+let aiClient: GoogleGenAI | null = null;
+
+function getAiClient(): GoogleGenAI {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) {
+    throw new Error("GEMINI_API_KEY environment variable is not configured on the server.");
   }
-}) : null;
+  if (!aiClient) {
+    aiClient = new GoogleGenAI({
+      apiKey: key,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
+    });
+  }
+  return aiClient;
+}
 
 // Fail-safe helper function to generate content with automatic retries and model fallbacks (e.g. handling 503 UNAVAILABLE or peak spikes)
 async function generateContentWithFallback(params: {
   contents: any;
   config?: any;
 }) {
-  if (!ai) {
-    throw new Error("Gemini API client is not initialized.");
-  }
+  const ai = getAiClient();
   const models = ["gemini-3.5-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
   let lastError = null;
 
@@ -75,11 +83,20 @@ async function startServer() {
       return res.status(400).json({ error: "Text is required" });
     }
 
-    if (!ai) {
-      return res.status(500).json({ error: "Gemini API key is not configured on the server." });
-    }
-
     try {
+      // Validate that GEMINI_API_KEY is configured
+      getAiClient();
+
+      // Normalize target lang (e.g. ko-KR -> ko, zh-tw -> zh-tw)
+      const matchedLang = (targetLang || "en").toLowerCase();
+      let langKey = matchedLang;
+      if (matchedLang.startsWith("ko")) langKey = "ko";
+      else if (matchedLang.startsWith("en")) langKey = "en";
+      else if (matchedLang.startsWith("zh")) {
+        langKey = matchedLang.includes("tw") || matchedLang.includes("hk") ? "zh-TW" : "zh-CN";
+      }
+      else if (matchedLang.startsWith("ja")) langKey = "ja";
+
       const languageMap: Record<string, string> = {
         ko: "Korean",
         en: "English",
@@ -89,7 +106,7 @@ async function startServer() {
         ja: "Japanese"
       };
 
-      const langName = languageMap[targetLang] || targetLang || "English";
+      const langName = languageMap[langKey] || targetLang || "English";
 
       const systemInstruction = `You are a highly accurate real-time logistics chat translator.
 
@@ -115,7 +132,7 @@ Strict Guidelines:
       const translated = response.text || "";
       res.json({ translated: translated.trim() });
     } catch (err: any) {
-      console.error("Translation error:", err);
+      console.error("Translation error at /api/translate:", err);
       res.status(500).json({ error: err.message || "Failed to translate" });
     }
   });
@@ -127,11 +144,9 @@ Strict Guidelines:
       return res.status(400).json({ error: "Messages array is required." });
     }
 
-    if (!ai) {
-      return res.status(500).json({ error: "Gemini API key is not configured on the server." });
-    }
-
     try {
+      getAiClient(); // Ensure API key is configured
+
       // Build dynamic rates context
       let ratesContext = "현재 등록된 개별 국가별 세부 요율 고시가 없습니다. 기본적인 표준 기간(항공 3-5일, 해상 10-20일)을 안내해 주세요.";
       if (rates && Array.isArray(rates) && rates.length > 0) {

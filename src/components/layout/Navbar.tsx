@@ -104,16 +104,6 @@ export default function Navbar() {
             </Link>
           ))}
 
-          {(profile?.role === 'admin' || profile?.role === 'super_admin') && (
-            <Link
-              to="/admin"
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-full text-xs font-black hover:bg-red-500 transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] animate-pulse border-2 border-red-400"
-            >
-              <Settings className="w-3.5 h-3.5" />
-              <span>{t('nav.adminPanel')}</span>
-            </Link>
-          )}
-
           {profile ? (
             <div className="relative">
               <button
@@ -151,16 +141,6 @@ export default function Navbar() {
                          </button>
                        </div>
                     </div>
-                    {profile?.role === 'admin' || profile?.role === 'super_admin' ? (
-                      <Link 
-                        to="/admin" 
-                        onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-3 w-full px-4 py-2 text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                      >
-                        <Settings className="w-4 h-4" />
-                        {t('nav.adminPanel')}
-                      </Link>
-                    ) : null}
                     <Link 
                       to="/referrals" 
                       onClick={() => setUserMenuOpen(false)}
@@ -285,16 +265,6 @@ export default function Navbar() {
               </Link>
             ))}
             <div className="flex flex-col gap-2 pt-4 border-t border-white/10 mt-2">
-              {(profile?.role === 'admin' || profile?.role === 'super_admin') && (
-                <Link
-                  to="/admin"
-                  onClick={() => setIsOpen(false)}
-                  className="w-full flex items-center justify-center gap-3 bg-red-600 text-white py-4 rounded-xl text-sm font-black shadow-lg mb-2"
-                >
-                  <Settings className="w-5 h-5" />
-                  {t('nav.adminPanel')}
-                </Link>
-              )}
               {profile ? (
                 <>
                   <Link

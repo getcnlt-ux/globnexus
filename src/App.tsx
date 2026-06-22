@@ -36,7 +36,7 @@ export default function App() {
               <Route path="/about" element={<About />} />
               <Route path="/services" element={<Services />} />
               <Route path="/apply" element={<Apply />} />
-              <Route path="/admin" element={<Admin />} />
+              <Route path="/nexis-secure-admin-portal" element={<Admin />} />
               <Route path="/referrals" element={<AgentDashboard />} />
               <Route path="/tracking" element={<Tracking />} />
               <Route path="/contact" element={<Contact />} />
