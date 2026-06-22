@@ -14,6 +14,7 @@ import {
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../components/common/AuthProvider';
 import { cn } from '../../lib/utils';
+import { translateTextFallback } from '../../lib/geminiFallback';
 import { MessageCircle, Send, User, Clock, CheckCircle, Trash2, Languages } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -65,7 +66,22 @@ export default function AdminChatList() {
         .then(async (res) => {
           if (res.ok) {
             const data = await res.json();
-            const translatedText = data.translated || "";
+            return data.translated || "";
+          } else {
+            throw new Error('Server translation failed');
+          }
+        })
+        .catch(async (err) => {
+          console.warn(`Server background prefetch failed for ${lang}, trying client fallback...`, err);
+          try {
+            return await translateTextFallback(text, lang);
+          } catch (fallbackErr) {
+            console.error(`Client fallback translation failed for ${lang}:`, fallbackErr);
+            return "";
+          }
+        })
+        .then((translatedText) => {
+          if (translatedText) {
             setTranslationCache(prev => ({
               ...prev,
               [msgId]: {
@@ -74,9 +90,6 @@ export default function AdminChatList() {
               }
             }));
           }
-        })
-        .catch(err => {
-          console.error(`Background prefetch error for ${lang}:`, err);
         });
 
         return currentCache;
@@ -118,18 +131,28 @@ export default function AdminChatList() {
 
     setTranslatingIds(prev => ({ ...prev, [msgId]: true }));
     try {
-      const response = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text,
-          targetLang: finalTargetLang
-        })
-      });
-      if (response.ok) {
-        const data = await response.json();
-        const translatedText = data.translated || "";
+      let translatedText = "";
+      try {
+        const response = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text,
+            targetLang: finalTargetLang
+          })
+        });
+        if (response.ok) {
+          const data = await response.json();
+          translatedText = data.translated || "";
+        } else {
+          throw new Error('Server translation returned non-ok status');
+        }
+      } catch (serverErr) {
+        console.warn('Server translation failed, falling back to client-side...', serverErr);
+        translatedText = await translateTextFallback(text, finalTargetLang);
+      }
 
+      if (translatedText) {
         // Update both cache and active view state
         setTranslationCache(prev => ({
           ...prev,
@@ -145,8 +168,6 @@ export default function AdminChatList() {
 
         // Fire asynchronous background prefetches for remaining languages
         prefetchRemainingLanguages(msgId, text, finalTargetLang);
-      } else {
-        console.error('Translation error response');
       }
     } catch (err) {
       console.error('Error translating:', err);
