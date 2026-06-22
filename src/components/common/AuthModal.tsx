@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Mail, User, LogIn, UserPlus, AlertCircle } from 'lucide-react';
+import { X, Mail, User, LogIn, UserPlus, AlertCircle, Eye, EyeOff, Shield } from 'lucide-react';
 import { 
   sendSignInLinkToEmail,
   signInWithPopup,
-  GoogleAuthProvider
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword
 } from 'firebase/auth';
 import { auth } from '../../lib/firebase';
 
@@ -18,6 +20,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
   const [isLogin, setIsLogin] = useState(initialMode === 'login');
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [authMethod, setAuthMethod] = useState<'password' | 'link'>('password');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [linkSent, setLinkSent] = useState(false);
@@ -29,6 +34,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
       setError(null);
       setEmail('');
       setDisplayName('');
+      setPassword('');
+      setShowPassword(false);
     }
   }, [isOpen, initialMode]);
 
@@ -36,12 +43,20 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
     console.error('Firebase Auth Error Info:', err.code, err.message, err);
     
     switch (err.code) {
+      case 'auth/wrong-password':
+      case 'auth/invalid-credential':
+        return '비밀번호가 올바르지 않거나 가입되어 있지 않은 계정 정보입니다. 입력하신 내용을 다시 한 번 확인해 주세요.';
+      case 'auth/user-not-found':
+        return '가입되지 않은 이메일 주소입니다. 신규 회원가입을 먼저 진행해 주세요.';
+      case 'auth/weak-password':
+        return '비밀번호는 최소 6자 이상으로 안전하게 설정해 주세요.';
+      
       case 'auth/operation-not-allowed':
         return `Firebase 인증 설정에서 '이메일 링크(비밀번호 없는 로그인)' 방식이 활성화되어 있지 않습니다.\n\n해결 방법:\n1. Firebase 콘솔(console.firebase.google.com)로 이동합니다.\n2. [Build] > [Authentication] > [Sign-in method] 메뉴로 이동합니다.\n3. '이메일/비밀번호(Email/Password)' 설정을 누릅니다.\n4. **'이메일 링크(비밀번호 없는 로그인)'** 활성화 스위치를 켜고 저장해 주세요!`;
       
       case 'auth/unauthorized-domain':
         return `현재 실행 중인 도메인이 Firebase 승인 목록에 없습니다.\n\n해결 방법:\n1. Firebase 콘솔로 이동합니다.\n2. [Build] > [Authentication] > [Settings] > [Authorized domains]로 이동합니다.\n3. 새 도메인으로 현재 도메인( ${window.location.hostname} )을 승인 도메인 목록에 추가해 주세요.`;
-
+ 
       case 'auth/popup-blocked':
         return '팝업창이 차단되었습니다. 브라우저 주소창 부분에서 팝업 차단을 해제한 후 다시 시도해 주세요.';
         
@@ -49,7 +64,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
         return '로그인 팝업 창이 닫혔습니다. 인증을 마칠 때까지 대기해 주세요.';
         
       case 'auth/email-already-in-use':
-        return '이미 등록되어 사용 중인 이메일입니다. 다른 이메일을 사용하거나 로그인을 시도해 주세요.';
+        return '이미 임포트되어 사용 중인 이메일입니다. 다른 이메일을 사용하거나 로그인을 시도해 주세요.';
         
       case 'auth/invalid-email':
         return '유효한 이메일 형식이 아닙니다. 이메일 주소를 다시 확인해 주세요.';
@@ -98,24 +113,49 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
       return;
     }
 
+    if (authMethod === 'password') {
+      if (!password) {
+        setError('비밀번호를 입력해주세요.');
+        return;
+      }
+      if (password.length < 6) {
+        setError('비밀번호는 최소 6자 이상이어야 합니다.');
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
-      const actionCodeSettings = {
-        // Redirect back to our exact current location (dynamic resolution)
-        url: window.location.origin + window.location.pathname,
-        handleCodeInApp: true,
-      };
+      if (authMethod === 'password') {
+        if (!isLogin && displayName.trim()) {
+          // Temporarily cache the name to set it in AuthProvider profile doc creation
+          window.localStorage.setItem('displayNameForSignIn', displayName.trim());
+        }
 
-      await sendSignInLinkToEmail(auth, email.trim(), actionCodeSettings);
+        if (isLogin) {
+          await signInWithEmailAndPassword(auth, email.trim(), password);
+        } else {
+          await createUserWithEmailAndPassword(auth, email.trim(), password);
+        }
+        onClose();
+      } else {
+        const actionCodeSettings = {
+          // Redirect back to our exact current location (dynamic resolution)
+          url: window.location.origin + window.location.pathname,
+          handleCodeInApp: true,
+        };
 
-      // Save email locally to pre-fill on link landing
-      window.localStorage.setItem('emailForSignIn', email.trim());
-      if (!isLogin && displayName.trim()) {
-        window.localStorage.setItem('displayNameForSignIn', displayName.trim());
+        await sendSignInLinkToEmail(auth, email.trim(), actionCodeSettings);
+
+        // Save email locally to pre-fill on link landing
+        window.localStorage.setItem('emailForSignIn', email.trim());
+        if (!isLogin && displayName.trim()) {
+          window.localStorage.setItem('displayNameForSignIn', displayName.trim());
+        }
+
+        setLinkSent(true);
       }
-
-      setLinkSent(true);
     } catch (err: any) {
       setError(getAuthErrorMessage(err));
     } finally {
@@ -149,7 +189,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
             </button>
 
             {linkSent ? (
-              <div className="text-center py-4">
+               <div className="text-center py-4">
                 <div className="flex justify-center mb-6 text-blue-500">
                   <div className="p-4 bg-blue-500/10 rounded-full animate-bounce">
                     <Mail size={32} />
@@ -182,14 +222,14 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
               </div>
             ) : (
               <>
-                <div className="text-center mb-8">
+                <div className="text-center mb-6">
                   <h2 className="text-3xl font-display font-bold mb-2">
                     {isLogin ? 'Welcome Back' : 'Join Us'}
                   </h2>
                   <p className="text-zinc-500 text-sm">
                     {isLogin 
-                      ? '패스워드 없이, 안전한 1회용 이메일 인증 링크로 로그인하세요' 
-                      : '패스워드 없이, 이메일 인증만으로 빠르게 간편 가입하세요'
+                      ? (authMethod === 'password' ? '이메일과 비밀번호로 간편하게 로그인하세요' : '안전한 1회용 이메일 인증 링크로 자동 로그인하세요') 
+                      : (authMethod === 'password' ? '이메일과 비밀번호로 빠르게 신규 가입하세요' : '이메일 인증 링크만으로 비밀번호 없이 신규 가입하세요')
                     }
                   </p>
                 </div>
@@ -221,12 +261,36 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                     Google 계정으로 로그인
                   </button>
 
-                  <div className="relative py-4">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-black/10 dark:border-white/10"></div>
-                    </div>
-                    <div className="relative flex justify-center text-[10px] uppercase font-mono tracking-widest">
-                      <span className="bg-zinc-50 dark:bg-black px-4 text-zinc-500 dark:text-zinc-500">또는 이메일 링크 로그인</span>
+                  <div className="relative py-1">
+                    <div className="flex bg-black/[0.04] dark:bg-white/5 rounded-xl p-1 mb-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAuthMethod('password');
+                          setError(null);
+                        }}
+                        className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+                          authMethod === 'password'
+                            ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm'
+                            : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                        }`}
+                      >
+                        이메일/비밀번호 (보안 추천)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAuthMethod('link');
+                          setError(null);
+                        }}
+                        className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+                          authMethod === 'link'
+                            ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm'
+                            : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                        }`}
+                      >
+                        이메일 링크 로그인
+                      </button>
                     </div>
                   </div>
 
@@ -263,6 +327,30 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                       </div>
                     </div>
 
+                    {authMethod === 'password' && (
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest ml-1 text-zinc-600 dark:text-zinc-400">Password</label>
+                        <div className="relative">
+                          <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 w-4 h-4" />
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full bg-black/[0.03] dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl py-3 pl-12 pr-12 text-sm focus:border-blue-500 outline-none transition-colors dark:text-white"
+                            placeholder="••••••"
+                            required={authMethod === 'password'}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                          >
+                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     {error && (
                       <div className="flex items-start gap-2.5 text-red-500 text-[11px] mt-2 bg-red-500/10 p-3.5 rounded-2xl border border-red-500/20 text-left whitespace-pre-line leading-relaxed">
                         <AlertCircle size={14} className="mt-0.5 shrink-0" />
@@ -277,6 +365,18 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                     >
                       {loading ? (
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : authMethod === 'password' ? (
+                        isLogin ? (
+                          <>
+                            <LogIn size={18} />
+                            로그인 완료하기
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus size={18} />
+                            무료 신규 가입하기
+                          </>
+                        )
                       ) : isLogin ? (
                         <>
                           <LogIn size={18} />
@@ -297,7 +397,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                     onClick={() => setIsLogin(!isLogin)}
                     className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-blue-500 dark:hover:text-white transition-colors"
                   >
-                    {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
+                    {isLogin ? "계정이 없으신가요? 무료 회원가입" : "이미 계정이 있으신가요? 로그인하기"}
                   </button>
                 </div>
               </>

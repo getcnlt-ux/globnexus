@@ -115,10 +115,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
             setProfile(data);
           } else {
+            const storedDisplayName = window.localStorage.getItem('displayNameForSignIn');
+            if (storedDisplayName) {
+              window.localStorage.removeItem('displayNameForSignIn');
+            }
             const newProfile: UserProfile = {
               uid: user.uid,
               email: user.email,
-              displayName: user.displayName || user.email?.split('@')[0] || 'User',
+              displayName: storedDisplayName || user.displayName || user.email?.split('@')[0] || 'User',
               role: isSuperAdminEmail ? 'super_admin' : 'user',
               referralCode: generateReferralCode()
             };
