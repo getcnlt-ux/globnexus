@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { 
+  onAuthStateChanged, 
+  User, 
+  isSignInWithEmailLink, 
+  signInWithEmailLink, 
+  updateProfile 
+} from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 
@@ -35,6 +41,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (isSignInWithEmailLink(auth, window.location.href)) {
+      const handleEmailLinkSignIn = async () => {
+        setLoading(true);
+        let email = window.localStorage.getItem('emailForSignIn');
+        if (!email) {
+          email = window.prompt('안전한 로그인을 위해 처음 가입/로그인했던 이메일 주소를 다시 입력해 주세요:');
+        }
+        if (email) {
+          try {
+            const result = await signInWithEmailLink(auth, email, window.location.href);
+            window.localStorage.removeItem('emailForSignIn');
+
+            const storedDisplayName = window.localStorage.getItem('displayNameForSignIn');
+            if (storedDisplayName && result.user) {
+              await updateProfile(result.user, { displayName: storedDisplayName });
+              window.localStorage.removeItem('displayNameForSignIn');
+
+              const userDocRef = doc(db, 'users', result.user.uid);
+              await setDoc(userDocRef, {
+                uid: result.user.uid,
+                email: result.user.email,
+                displayName: storedDisplayName,
+                role: result.user.email === 'getcnlt@gmail.com' ? 'super_admin' : 'user',
+                referralCode: Math.random().toString(36).substring(2, 8).toUpperCase()
+              }, { merge: true });
+            }
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } catch (error: any) {
+            console.error('Error signing in with email link:', error);
+            alert(`인증 링크로 로그인 중 오류가 발생했습니다: ${error.message}`);
+          }
+        }
+        setLoading(false);
+      };
+      
+      handleEmailLinkSignIn();
+    }
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {

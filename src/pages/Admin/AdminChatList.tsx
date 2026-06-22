@@ -47,6 +47,43 @@ export default function AdminChatList() {
   const [translatingIds, setTranslatingIds] = useState<Record<string, boolean>>({});
   const [translationCache, setTranslationCache] = useState<Record<string, Record<string, string>>>({});
 
+  const prefetchRemainingLanguages = (msgId: string, text: string, activeLang: string) => {
+    const allLangs = ['ko', 'en', 'zh', 'ja'];
+    const remainingLangs = allLangs.filter(lang => lang !== activeLang);
+
+    remainingLangs.forEach((lang) => {
+      setTranslationCache(currentCache => {
+        if (currentCache[msgId]?.[lang]) {
+          return currentCache;
+        }
+
+        fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, targetLang: lang })
+        })
+        .then(async (res) => {
+          if (res.ok) {
+            const data = await res.json();
+            const translatedText = data.translated || "";
+            setTranslationCache(prev => ({
+              ...prev,
+              [msgId]: {
+                ...(prev[msgId] || {}),
+                [lang]: translatedText
+              }
+            }));
+          }
+        })
+        .catch(err => {
+          console.error(`Background prefetch error for ${lang}:`, err);
+        });
+
+        return currentCache;
+      });
+    });
+  };
+
   const handleTranslate = async (msgId: string, text: string, targetLang?: string) => {
     if (translatingIds[msgId]) return;
 
@@ -74,6 +111,8 @@ export default function AdminChatList() {
         ...prev,
         [msgId]: { text: translationCache[msgId][finalTargetLang], lang: finalTargetLang }
       }));
+      // Prefetch other languages in parallel background thread
+      prefetchRemainingLanguages(msgId, text, finalTargetLang);
       return;
     }
 
@@ -103,6 +142,9 @@ export default function AdminChatList() {
           ...prev, 
           [msgId]: { text: translatedText, lang: finalTargetLang } 
         }));
+
+        // Fire asynchronous background prefetches for remaining languages
+        prefetchRemainingLanguages(msgId, text, finalTargetLang);
       } else {
         console.error('Translation error response');
       }

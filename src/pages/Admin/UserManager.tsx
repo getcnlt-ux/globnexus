@@ -9,7 +9,8 @@ import {
   XCircle,
   AlertTriangle,
   Trash2,
-  Edit2
+  Edit2,
+  Truck
 } from 'lucide-react';
 import { 
   collection, 
@@ -19,7 +20,9 @@ import {
   updateDoc,
   where,
   getDocs,
-  deleteDoc
+  deleteDoc,
+  addDoc,
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { cn } from '../../lib/utils';
@@ -41,6 +44,64 @@ export default function UserManager() {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  
+  const [shipmentTargetUser, setShipmentTargetUser] = useState<UserProfile | null>(null);
+  const [newShipment, setNewShipment] = useState({
+    trackingNumber: '',
+    currentStep: 'ordered',
+    desc: ''
+  });
+
+  const handleAddShipmentForUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!shipmentTargetUser || !newShipment.trackingNumber) return;
+
+    try {
+      setLoading(true);
+      const now = new Date();
+      const customerName = shipmentTargetUser.displayName || shipmentTargetUser.email;
+
+      const stepLabels: Record<string, string> = {
+        ordered: '주문접수',
+        preparing: '배송준비중',
+        warehouse: '창고입고',
+        export: '수출통관',
+        shipping: '해상/항공운송',
+        import: '수입통관',
+        local: '국내배송',
+        delivered: '배송완료'
+      };
+      
+      const statusDesc = newShipment.desc || `${stepLabels[newShipment.currentStep]} 단계 완료`;
+
+      await addDoc(collection(db, 'shipments'), {
+        trackingNumber: newShipment.trackingNumber.trim(),
+        customerName: customerName,
+        customerEmail: shipmentTargetUser.email,
+        customerUid: shipmentTargetUser.uid,
+        currentStep: newShipment.currentStep,
+        desc: statusDesc,
+        updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp(),
+        history: [{
+          status: newShipment.currentStep,
+          time: now,
+          location: 'System Intake',
+          desc: statusDesc
+        }]
+      });
+
+      setSuccessMessage(`'${customerName}' 회원님의 송장(${newShipment.trackingNumber}) 등록이 완료되었습니다.`);
+      setShipmentTargetUser(null);
+      setNewShipment({ trackingNumber: '', currentStep: 'ordered', desc: '' });
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      console.error('Error adding shipment for user:', err);
+      alert('송장 등록 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const deleteUser = async (userId: string, email: string) => {
     if (profile?.role !== 'super_admin') {
@@ -221,6 +282,86 @@ export default function UserManager() {
         </div>
       )}
 
+      {shipmentTargetUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm px-6">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-md glass-panel p-8 rounded-3xl border border-white/10"
+          >
+            <div className="flex items-center gap-2 text-blue-500 mb-2">
+              <Truck size={20} />
+              <span className="text-xs uppercase font-mono tracking-widest font-black">// REGISTER_SHIPMENT</span>
+            </div>
+            <h3 className="text-xl font-bold mb-1">배송 송장 및 현황 등록</h3>
+            <p className="text-xs text-zinc-500 mb-6 font-medium">
+              대상 회원: <span className="font-bold text-white">{shipmentTargetUser.displayName || shipmentTargetUser.email}</span> ({shipmentTargetUser.email})
+            </p>
+            
+            <form onSubmit={handleAddShipmentForUser} className="space-y-4">
+              <div>
+                <label className="text-[10px] text-zinc-500 uppercase font-mono mb-1 block">송장 번호 (Tracking Number)</label>
+                <input 
+                  type="text"
+                  required
+                  placeholder="예: GB-12345-6789"
+                  value={newShipment.trackingNumber}
+                  onChange={(e) => setNewShipment({...newShipment, trackingNumber: e.target.value})}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none text-white font-mono"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-zinc-500 uppercase font-mono mb-1 block">현재 배송 상태</label>
+                <select 
+                  value={newShipment.currentStep}
+                  onChange={(e) => setNewShipment({...newShipment, currentStep: e.target.value})}
+                  className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none text-white font-bold"
+                >
+                  <option value="ordered">주문접수 (Ordered)</option>
+                  <option value="preparing">배송준비중 (Preparing)</option>
+                  <option value="warehouse">창고입고 (Warehouse)</option>
+                  <option value="export">수출통관 (Export)</option>
+                  <option value="shipping">해상/항공운송 (Shipping)</option>
+                  <option value="import">수입통관 (Import)</option>
+                  <option value="local">국내배송 (Local Courier)</option>
+                  <option value="delivered">배송완료 (Delivered)</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] text-zinc-500 uppercase font-mono mb-1 block">추가 설명 (생략 가능)</label>
+                <input 
+                  type="text"
+                  placeholder="예: 물류센터에 입고되어 분류 작업 진행 중입니다."
+                  value={newShipment.desc}
+                  onChange={(e) => setNewShipment({...newShipment, desc: e.target.value})}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none text-white"
+                />
+              </div>
+              
+              <div className="flex gap-3 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setShipmentTargetUser(null);
+                    setNewShipment({ trackingNumber: '', currentStep: 'ordered', desc: '' });
+                  }}
+                  className="flex-grow py-3 rounded-xl bg-white/5 border border-white/10 text-xs font-bold hover:bg-white/10 transition-all text-zinc-400 hover:text-white"
+                >
+                  취소
+                </button>
+                <button 
+                  type="submit"
+                  disabled={loading}
+                  className="flex-grow py-3 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-500 transition-all shadow-lg flex items-center justify-center gap-2"
+                >
+                  {loading ? '저장 중...' : '송장 등록'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-4">
         {filteredUsers.length === 0 ? (
           <div className="glass-panel p-20 text-center rounded-3xl border-dashed border-white/5 text-zinc-600">
@@ -263,6 +404,15 @@ export default function UserManager() {
               </div>
 
               <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShipmentTargetUser(user)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:text-white hover:bg-blue-600 transition-all font-bold text-xs"
+                  title="배송 송장 등록"
+                >
+                  <Truck size={14} />
+                  <span>배송 등록</span>
+                </button>
+
                 <button
                   onClick={() => setEditingUser(user)}
                   className="p-2 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 transition-all"
