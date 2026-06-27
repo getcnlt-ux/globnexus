@@ -6,6 +6,8 @@ import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { initializeApp } from 'firebase/app';
 import { initializeFirestore, collection as fsCollection, doc as fsDoc, getDoc as fsGetDoc, setDoc as fsSetDoc, addDoc as fsAddDoc, updateDoc as fsUpdateDoc, deleteDoc as fsDeleteDoc, getDocs as fsGetDocs, query as fsQuery, where as fsWhere, orderBy as fsOrderBy, limit as fsLimit, serverTimestamp as fsServerTimestamp } from 'firebase/firestore';
 import { getAuth, signInWithEmailAndPassword as nodeSignIn, createUserWithEmailAndPassword as nodeCreateUser, sendSignInLinkToEmail as nodeSendLink, signInWithEmailLink as nodeSignInLink } from 'firebase/auth';
+import { initializeApp as initializeAdminApp } from 'firebase-admin/app';
+import { getFirestore as getAdminFirestore, FieldValue as AdminFieldValue } from 'firebase-admin/firestore';
 import fs from 'fs';
 
 dotenv.config();
@@ -14,19 +16,23 @@ dotenv.config();
 let firebaseApp: any;
 let serverDb: any;
 let serverAuth: any;
+let useAdminSdk = false;
 
 try {
   const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
   if (fs.existsSync(configPath)) {
     const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
     firebaseApp = initializeApp(config);
+    serverAuth = getAuth(firebaseApp);
+
+    // Use Client SDK with API key to bypass cross-project IAM limitations of Cloud Run service account
     if (config.firestoreDatabaseId) {
       serverDb = initializeFirestore(firebaseApp, {}, config.firestoreDatabaseId);
     } else {
       serverDb = initializeFirestore(firebaseApp, {});
     }
-    serverAuth = getAuth(firebaseApp);
-    console.log("Server: Firebase initialized successfully");
+    useAdminSdk = false;
+    console.log("Server: Firebase Client SDK initialized successfully for Firestore (database: " + (config.firestoreDatabaseId || 'default') + ")");
   } else {
     console.warn("Server: firebase-applet-config.json not found");
   }
@@ -43,7 +49,9 @@ function processServerTimestamps(data: any): any {
     const copy = { ...data };
     for (const key of Object.keys(copy)) {
       if (copy[key] === '__SERVER_TIMESTAMP__') {
-        copy[key] = fsServerTimestamp();
+        copy[key] = useAdminSdk 
+          ? AdminFieldValue.serverTimestamp()
+          : fsServerTimestamp();
       } else if (typeof copy[key] === 'object') {
         copy[key] = processServerTimestamps(copy[key]);
       }
@@ -272,12 +280,29 @@ Please reply to the customer's last message as the "Global Nexis Smart AI Suppor
     const { path: docPath, id } = req.body;
     try {
       if (!serverDb) throw new Error("Firebase DB is not initialized on the server.");
-      const docRef = fsDoc(serverDb, docPath, id);
-      const docSnap: any = await fsGetDoc(docRef);
-      if (docSnap.exists()) {
-        res.json({ id: docSnap.id, exists: true, data: docSnap.data() });
+      
+      let exists = false;
+      let data: any = null;
+      let docId = id;
+
+      if (useAdminSdk) {
+        const docRef = serverDb.doc(`${docPath}/${id}`);
+        const docSnap = await docRef.get();
+        exists = docSnap.exists;
+        docId = docSnap.id;
+        data = exists ? docSnap.data() : null;
       } else {
-        res.json({ id: docSnap.id, exists: false });
+        const docRef = fsDoc(serverDb, docPath, id);
+        const docSnap: any = await fsGetDoc(docRef);
+        exists = docSnap.exists();
+        docId = docSnap.id;
+        data = exists ? docSnap.data() : null;
+      }
+
+      if (exists) {
+        res.json({ id: docId, exists: true, data });
+      } else {
+        res.json({ id: docId, exists: false });
       }
     } catch (err: any) {
       console.error("getDoc error:", err);
@@ -290,24 +315,45 @@ Please reply to the customer's last message as the "Global Nexis Smart AI Suppor
     const { path: collectionPath, constraints: reqConstraints } = req.body;
     try {
       if (!serverDb) throw new Error("Firebase DB is not initialized on the server.");
-      const colRef = fsCollection(serverDb, collectionPath);
-      const constraints: any[] = [];
+      
+      let docs: any[] = [];
 
-      if (reqConstraints && Array.isArray(reqConstraints)) {
-        for (const c of reqConstraints) {
-          if (c.type === 'where') {
-            constraints.push(fsWhere(c.fieldPath, c.opStr, c.value));
-          } else if (c.type === 'orderBy') {
-            constraints.push(fsOrderBy(c.fieldPath, c.directionStr || 'asc'));
-          } else if (c.type === 'limit') {
-            constraints.push(fsLimit(Number(c.limitNum)));
+      if (useAdminSdk) {
+        let q: any = serverDb.collection(collectionPath);
+        if (reqConstraints && Array.isArray(reqConstraints)) {
+          for (const c of reqConstraints) {
+            if (c.type === 'where') {
+              q = q.where(c.fieldPath, c.opStr, c.value);
+            } else if (c.type === 'orderBy') {
+              q = q.orderBy(c.fieldPath, c.directionStr || 'asc');
+            } else if (c.type === 'limit') {
+              q = q.limit(Number(c.limitNum));
+            }
           }
         }
+        const querySnapshot = await q.get();
+        docs = querySnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+      } else {
+        const colRef = fsCollection(serverDb, collectionPath);
+        const constraints: any[] = [];
+
+        if (reqConstraints && Array.isArray(reqConstraints)) {
+          for (const c of reqConstraints) {
+            if (c.type === 'where') {
+              constraints.push(fsWhere(c.fieldPath, c.opStr, c.value));
+            } else if (c.type === 'orderBy') {
+              constraints.push(fsOrderBy(c.fieldPath, c.directionStr || 'asc'));
+            } else if (c.type === 'limit') {
+              constraints.push(fsLimit(Number(c.limitNum)));
+            }
+          }
+        }
+
+        const q = fsQuery(colRef, ...constraints);
+        const querySnapshot = await fsGetDocs(q);
+        docs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       }
 
-      const q = fsQuery(colRef, ...constraints);
-      const querySnapshot = await fsGetDocs(q);
-      const docs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       res.json({ docs });
     } catch (err: any) {
       console.error("getDocs error:", err);
@@ -320,10 +366,20 @@ Please reply to the customer's last message as the "Global Nexis Smart AI Suppor
     const { path: collectionPath, data } = req.body;
     try {
       if (!serverDb) throw new Error("Firebase DB is not initialized on the server.");
-      const colRef = fsCollection(serverDb, collectionPath);
       const processedData = processServerTimestamps(data);
-      const docRef = await fsAddDoc(colRef, processedData);
-      res.json({ id: docRef.id });
+      let docId = '';
+
+      if (useAdminSdk) {
+        const colRef = serverDb.collection(collectionPath);
+        const docRef = await colRef.add(processedData);
+        docId = docRef.id;
+      } else {
+        const colRef = fsCollection(serverDb, collectionPath);
+        const docRef = await fsAddDoc(colRef, processedData);
+        docId = docRef.id;
+      }
+
+      res.json({ id: docId });
     } catch (err: any) {
       console.error("addDoc error:", err);
       res.status(500).json({ error: err.message });
@@ -335,9 +391,20 @@ Please reply to the customer's last message as the "Global Nexis Smart AI Suppor
     const { path: docPath, id, data, options } = req.body;
     try {
       if (!serverDb) throw new Error("Firebase DB is not initialized on the server.");
-      const docRef = fsDoc(serverDb, docPath, id);
       const processedData = processServerTimestamps(data);
-      await fsSetDoc(docRef, processedData, options || {});
+
+      if (useAdminSdk) {
+        const docRef = serverDb.doc(`${docPath}/${id}`);
+        if (options && options.merge) {
+          await docRef.set(processedData, { merge: true });
+        } else {
+          await docRef.set(processedData);
+        }
+      } else {
+        const docRef = fsDoc(serverDb, docPath, id);
+        await fsSetDoc(docRef, processedData, options || {});
+      }
+
       res.json({ success: true });
     } catch (err: any) {
       console.error("setDoc error:", err);
@@ -350,9 +417,16 @@ Please reply to the customer's last message as the "Global Nexis Smart AI Suppor
     const { path: docPath, id, data } = req.body;
     try {
       if (!serverDb) throw new Error("Firebase DB is not initialized on the server.");
-      const docRef = fsDoc(serverDb, docPath, id);
       const processedData = processServerTimestamps(data);
-      await fsUpdateDoc(docRef, processedData);
+
+      if (useAdminSdk) {
+        const docRef = serverDb.doc(`${docPath}/${id}`);
+        await docRef.update(processedData);
+      } else {
+        const docRef = fsDoc(serverDb, docPath, id);
+        await fsUpdateDoc(docRef, processedData);
+      }
+
       res.json({ success: true });
     } catch (err: any) {
       console.error("updateDoc error:", err);
@@ -365,8 +439,15 @@ Please reply to the customer's last message as the "Global Nexis Smart AI Suppor
     const { path: docPath, id } = req.body;
     try {
       if (!serverDb) throw new Error("Firebase DB is not initialized on the server.");
-      const docRef = fsDoc(serverDb, docPath, id);
-      await fsDeleteDoc(docRef);
+
+      if (useAdminSdk) {
+        const docRef = serverDb.doc(`${docPath}/${id}`);
+        await docRef.delete();
+      } else {
+        const docRef = fsDoc(serverDb, docPath, id);
+        await fsDeleteDoc(docRef);
+      }
+
       res.json({ success: true });
     } catch (err: any) {
       console.error("deleteDoc error:", err);

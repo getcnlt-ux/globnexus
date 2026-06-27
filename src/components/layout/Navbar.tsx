@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu, X, Plane, Globe2, Settings, LogIn, LogOut, User, UserPlus, Link as LinkIcon, Check, Users, Sun, Moon } from 'lucide-react';
+import { Menu, X, Plane, Globe2, Settings, LogIn, LogOut, User, UserPlus, Link as LinkIcon, Check, Users, Sun, Moon, Database, Cloud } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../common/AuthProvider';
 import { useTheme } from '../common/ThemeProvider';
 import AuthModal from '../common/AuthModal';
 import { auth } from '../../lib/firebase';
-import { signOut } from '../../lib/dbWrapper';
+import { signOut, getStoredDBMode, setStoredDBMode } from '../../lib/dbWrapper';
 
 const languages = [
   { code: 'ko', name: 'KR' },
@@ -184,6 +184,8 @@ export default function Navbar() {
             </div>
           )}
           
+
+
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
@@ -310,6 +312,8 @@ export default function Navbar() {
                 </div>
               )}
             </div>
+
+
 
             <div className="pt-6 border-t border-white/10 mt-2">
               <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">

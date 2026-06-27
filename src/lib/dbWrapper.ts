@@ -89,15 +89,11 @@ export const initializeLocalStorageDB = (force = false) => {
 };
 
 export const getStoredDBMode = (): DBMode => {
-  const loaded = localStorage.getItem('global_nexis_db_mode') as DBMode;
-  if (loaded === 'cloud' || loaded === 'local') return loaded;
-  return 'cloud'; // Default to cloud proxy mode for seamless GFW-safe synchronization
+  return 'cloud'; // Always run in integrated Cloud mode for actual production use
 };
 
 export const setStoredDBMode = (mode: DBMode) => {
-  localStorage.setItem('global_nexis_db_mode', mode);
-  window.dispatchEvent(new Event('db_mode_changed'));
-  dbEvents.emit('db_mode_changed', mode);
+  // Locked to cloud mode for production use
 };
 
 export const verifyCloudConnectivity = async (): Promise<boolean> => {

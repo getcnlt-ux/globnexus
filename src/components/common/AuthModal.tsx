@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Mail, User, LogIn, UserPlus, AlertCircle, Eye, EyeOff, Shield } from 'lucide-react';
+import { X, Mail, User, LogIn, UserPlus, AlertCircle, Eye, EyeOff, Shield, Database } from 'lucide-react';
 import { 
   signInWithPopup,
   GoogleAuthProvider,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  sendSignInLinkToEmail
+  sendSignInLinkToEmail,
+  setStoredDBMode
 } from '../../lib/dbWrapper';
 import { auth } from '../../lib/firebase';
 
@@ -158,6 +159,38 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
       }
     } catch (err: any) {
       setError(getAuthErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSwitchToLocalAndLogin = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      setStoredDBMode('local');
+      
+      const useEmail = email.trim() || 'getcnlt@gmail.com';
+      const usePassword = password || '123456';
+      
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, useEmail, usePassword);
+      } else {
+        const useName = displayName.trim() || useEmail.split('@')[0];
+        window.localStorage.setItem('displayNameForSignIn', useName);
+        try {
+          await createUserWithEmailAndPassword(auth, useEmail, usePassword);
+        } catch (regErr: any) {
+          if (regErr && (regErr.code === 'auth/email-already-in-use' || regErr.message?.includes('already-in-use'))) {
+            await signInWithEmailAndPassword(auth, useEmail, usePassword);
+          } else {
+            throw regErr;
+          }
+        }
+      }
+      onClose();
+    } catch (err: any) {
+      setError(`로컬 로그인 중 오류 발생: ${err.message || err}`);
     } finally {
       setLoading(false);
     }
@@ -351,12 +384,48 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                       </div>
                     )}
 
-                    {error && (
-                      <div className="flex items-start gap-2.5 text-red-500 text-[11px] mt-2 bg-red-500/10 p-3.5 rounded-2xl border border-red-500/20 text-left whitespace-pre-line leading-relaxed">
-                        <AlertCircle size={14} className="mt-0.5 shrink-0" />
-                        <span>{error}</span>
-                      </div>
-                    )}
+                    {error && (() => {
+                      const isNetworkOr405Error = error && (
+                        error.includes('405') || 
+                        error.includes('network-request-failed') || 
+                        error.includes('fetch') || 
+                        error.includes('Failed to fetch') || 
+                        error.includes('status: 405')
+                      );
+                      return (
+                        <div className="space-y-3 mt-2">
+                          <div className="flex items-start gap-2.5 text-red-500 text-[11px] bg-red-500/10 p-3.5 rounded-2xl border border-red-500/20 text-left whitespace-pre-line leading-relaxed">
+                            <AlertCircle size={14} className="mt-0.5 shrink-0" />
+                            <div className="flex-1">
+                              <span>{error}</span>
+                            </div>
+                          </div>
+
+                          {isNetworkOr405Error && (
+                            <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl text-left space-y-3">
+                              <h4 className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                                <Shield size={14} className="text-amber-500" />
+                                중국 내 네트워크 방화벽 차단 안내
+                              </h4>
+                              <p className="text-[10px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                현재 VPN 없이 중국에서 접속 중이거나 만리방화벽(GFW) 차단 등의 영향으로 서버 인증 API 연결(405 오류)이 불가능한 상태입니다.
+                                <strong className="block mt-1 font-semibold text-zinc-800 dark:text-zinc-200">
+                                  '로컬 데모 샌드박스 모드'로 전환하시면, VPN 없이도 브라우저 로컬 저장소를 기반으로 모든 기능(게시판, 접수, 트래킹, 고객문의 등)을 즉시 이용하실 수 있습니다!
+                                </strong>
+                              </p>
+                              <button
+                                type="button"
+                                onClick={handleSwitchToLocalAndLogin}
+                                className="w-full bg-amber-500 hover:bg-amber-400 text-black font-extrabold py-2.5 px-4 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                              >
+                                <Database size={13} />
+                                로컬 데모 모드로 전환 및 즉시 로그인
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     <button
                       type="submit"
