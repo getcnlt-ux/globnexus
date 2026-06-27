@@ -17,11 +17,13 @@ let firebaseApp: any;
 let serverDb: any;
 let serverAuth: any;
 let useAdminSdk = false;
+let firestoreConfig: any = null;
 
 try {
   const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
   if (fs.existsSync(configPath)) {
     const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    firestoreConfig = config;
     firebaseApp = initializeApp(config);
     serverAuth = getAuth(firebaseApp);
 
@@ -38,6 +40,148 @@ try {
   }
 } catch (error) {
   console.error("Server: Failed to initialize Firebase on server:", error);
+}
+
+// Helpers for Firestore REST API
+function fromFirestoreValue(value: any): any {
+  if (!value) return null;
+  const types = ['stringValue', 'doubleValue', 'integerValue', 'booleanValue', 'timestampValue', 'nullValue', 'bytesValue', 'referenceValue', 'geoPointValue', 'arrayValue', 'mapValue'];
+  for (const t of types) {
+    if (t in value) {
+      if (t === 'nullValue') return null;
+      if (t === 'integerValue') return parseInt(value[t], 10);
+      if (t === 'doubleValue') return parseFloat(value[t]);
+      if (t === 'arrayValue') {
+        const values = value[t].values || [];
+        return values.map((val: any) => fromFirestoreValue(val));
+      }
+      if (t === 'mapValue') {
+        const fields = value[t].fields || {};
+        const obj: any = {};
+        for (const k of Object.keys(fields)) {
+          obj[k] = fromFirestoreValue(fields[k]);
+        }
+        return obj;
+      }
+      return value[t];
+    }
+  }
+  return value;
+}
+
+function fromFirestoreFields(fields: any): any {
+  const obj: any = {};
+  if (!fields) return obj;
+  for (const k of Object.keys(fields)) {
+    obj[k] = fromFirestoreValue(fields[k]);
+  }
+  return obj;
+}
+
+function toFirestoreValue(value: any): any {
+  if (value === null || value === undefined) {
+    return { nullValue: null };
+  }
+  if (typeof value === 'string') {
+    return { stringValue: value };
+  }
+  if (typeof value === 'boolean') {
+    return { booleanValue: value };
+  }
+  if (typeof value === 'number') {
+    if (Number.isInteger(value)) {
+      return { integerValue: value.toString() };
+    }
+    return { doubleValue: value };
+  }
+  if (Array.isArray(value)) {
+    return {
+      arrayValue: {
+        values: value.map(val => toFirestoreValue(val))
+      }
+    };
+  }
+  if (typeof value === 'object') {
+    const fields: any = {};
+    for (const k of Object.keys(value)) {
+      fields[k] = toFirestoreValue(value[k]);
+    }
+    return {
+      mapValue: { fields }
+    };
+  }
+  return { stringValue: String(value) };
+}
+
+function toFirestoreFields(obj: any): any {
+  const fields: any = {};
+  if (!obj) return fields;
+  for (const k of Object.keys(obj)) {
+    if (k === 'id') continue;
+    fields[k] = toFirestoreValue(obj[k]);
+  }
+  return fields;
+}
+
+function applyInMemoryQuery(docs: any[], constraints: any[]): any[] {
+  let result = [...docs];
+
+  if (!constraints || !Array.isArray(constraints)) return result;
+
+  for (const c of constraints) {
+    if (c.type === 'where') {
+      const { fieldPath, opStr, value } = c;
+      result = result.filter(doc => {
+        const val = doc[fieldPath];
+        if (opStr === '==') {
+          return val === value;
+        } else if (opStr === '!=') {
+          return val !== value;
+        } else if (opStr === '<') {
+          return val < value;
+        } else if (opStr === '<=') {
+          return val <= value;
+        } else if (opStr === '>') {
+          return val > value;
+        } else if (opStr === '>=') {
+          return val >= value;
+        } else if (opStr === 'array-contains') {
+          return Array.isArray(val) && val.includes(value);
+        } else if (opStr === 'in') {
+          return Array.isArray(value) && value.includes(val);
+        } else if (opStr === 'not-in') {
+          return Array.isArray(value) && !value.includes(val);
+        }
+        return true;
+      });
+    }
+  }
+
+  // Handle orderBy
+  for (const c of constraints) {
+    if (c.type === 'orderBy') {
+      const { fieldPath, directionStr } = c;
+      const isDesc = directionStr === 'desc';
+      result.sort((a, b) => {
+        const valA = a[fieldPath];
+        const valB = b[fieldPath];
+        if (valA === undefined || valA === null) return isDesc ? 1 : -1;
+        if (valB === undefined || valB === null) return isDesc ? -1 : 1;
+        if (valA < valB) return isDesc ? 1 : -1;
+        if (valA > valB) return isDesc ? -1 : 1;
+        return 0;
+      });
+    }
+  }
+
+  // Handle limit
+  for (const c of constraints) {
+    if (c.type === 'limit') {
+      result = result.slice(0, Number(c.limitNum));
+    }
+  }
+
+  return result;
 }
 
 function processServerTimestamps(data: any): any {
@@ -279,31 +423,22 @@ Please reply to the customer's last message as the "Global Nexis Smart AI Suppor
   app.post("/api/db/getDoc", async (req, res) => {
     const { path: docPath, id } = req.body;
     try {
-      if (!serverDb) throw new Error("Firebase DB is not initialized on the server.");
+      if (!firestoreConfig) throw new Error("Firebase configuration not found.");
+      const { projectId, apiKey, firestoreDatabaseId } = firestoreConfig;
+      const dbId = firestoreDatabaseId || "(default)";
+      const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/${docPath}/${id}?key=${apiKey}`;
       
-      let exists = false;
-      let data: any = null;
-      let docId = id;
-
-      if (useAdminSdk) {
-        const docRef = serverDb.doc(`${docPath}/${id}`);
-        const docSnap = await docRef.get();
-        exists = docSnap.exists;
-        docId = docSnap.id;
-        data = exists ? docSnap.data() : null;
-      } else {
-        const docRef = fsDoc(serverDb, docPath, id);
-        const docSnap: any = await fsGetDoc(docRef);
-        exists = docSnap.exists();
-        docId = docSnap.id;
-        data = exists ? docSnap.data() : null;
+      const fetchRes = await fetch(url);
+      if (fetchRes.status === 404) {
+        return res.json({ id, exists: false });
       }
-
-      if (exists) {
-        res.json({ id: docId, exists: true, data });
-      } else {
-        res.json({ id: docId, exists: false });
+      if (!fetchRes.ok) {
+        const errorText = await fetchRes.text();
+        throw new Error(`Firestore REST API error: ${errorText}`);
       }
+      const docJson = await fetchRes.json();
+      const data = fromFirestoreFields(docJson.fields);
+      res.json({ id, exists: true, data });
     } catch (err: any) {
       console.error("getDoc error:", err);
       res.status(500).json({ error: err.message });
@@ -312,48 +447,36 @@ Please reply to the customer's last message as the "Global Nexis Smart AI Suppor
 
   // 2. getDocs
   app.post("/api/db/getDocs", async (req, res) => {
-    const { path: collectionPath, constraints: reqConstraints } = req.body;
+    const { path: collectionPath, constraints } = req.body;
     try {
-      if (!serverDb) throw new Error("Firebase DB is not initialized on the server.");
+      if (!firestoreConfig) throw new Error("Firebase configuration not found.");
+      const { projectId, apiKey, firestoreDatabaseId } = firestoreConfig;
+      const dbId = firestoreDatabaseId || "(default)";
       
-      let docs: any[] = [];
-
-      if (useAdminSdk) {
-        let q: any = serverDb.collection(collectionPath);
-        if (reqConstraints && Array.isArray(reqConstraints)) {
-          for (const c of reqConstraints) {
-            if (c.type === 'where') {
-              q = q.where(c.fieldPath, c.opStr, c.value);
-            } else if (c.type === 'orderBy') {
-              q = q.orderBy(c.fieldPath, c.directionStr || 'asc');
-            } else if (c.type === 'limit') {
-              q = q.limit(Number(c.limitNum));
-            }
-          }
-        }
-        const querySnapshot = await q.get();
-        docs = querySnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
-      } else {
-        const colRef = fsCollection(serverDb, collectionPath);
-        const constraints: any[] = [];
-
-        if (reqConstraints && Array.isArray(reqConstraints)) {
-          for (const c of reqConstraints) {
-            if (c.type === 'where') {
-              constraints.push(fsWhere(c.fieldPath, c.opStr, c.value));
-            } else if (c.type === 'orderBy') {
-              constraints.push(fsOrderBy(c.fieldPath, c.directionStr || 'asc'));
-            } else if (c.type === 'limit') {
-              constraints.push(fsLimit(Number(c.limitNum)));
-            }
-          }
-        }
-
-        const q = fsQuery(colRef, ...constraints);
-        const querySnapshot = await fsGetDocs(q);
-        docs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/${collectionPath}?key=${apiKey}`;
+      const fetchRes = await fetch(url);
+      
+      if (fetchRes.status === 404) {
+        return res.json({ docs: [] });
       }
+      if (!fetchRes.ok) {
+        const errorText = await fetchRes.text();
+        throw new Error(`Firestore REST API error: ${errorText}`);
+      }
+      
+      const resJson = await fetchRes.json();
+      const rawDocs = resJson.documents || [];
+      
+      let docs = rawDocs.map((doc: any) => {
+        const nameParts = doc.name.split('/');
+        const id = nameParts[nameParts.length - 1];
+        return {
+          id,
+          ...fromFirestoreFields(doc.fields)
+        };
+      });
 
+      docs = applyInMemoryQuery(docs, constraints);
       res.json({ docs });
     } catch (err: any) {
       console.error("getDocs error:", err);
@@ -365,20 +488,30 @@ Please reply to the customer's last message as the "Global Nexis Smart AI Suppor
   app.post("/api/db/addDoc", async (req, res) => {
     const { path: collectionPath, data } = req.body;
     try {
-      if (!serverDb) throw new Error("Firebase DB is not initialized on the server.");
+      if (!firestoreConfig) throw new Error("Firebase configuration not found.");
+      const { projectId, apiKey, firestoreDatabaseId } = firestoreConfig;
+      const dbId = firestoreDatabaseId || "(default)";
       const processedData = processServerTimestamps(data);
-      let docId = '';
-
-      if (useAdminSdk) {
-        const colRef = serverDb.collection(collectionPath);
-        const docRef = await colRef.add(processedData);
-        docId = docRef.id;
-      } else {
-        const colRef = fsCollection(serverDb, collectionPath);
-        const docRef = await fsAddDoc(colRef, processedData);
-        docId = docRef.id;
+      
+      const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/${collectionPath}?key=${apiKey}`;
+      
+      const fetchRes = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fields: toFirestoreFields(processedData)
+        })
+      });
+      
+      if (!fetchRes.ok) {
+        const errorText = await fetchRes.text();
+        throw new Error(`Firestore REST API error: ${errorText}`);
       }
-
+      
+      const createdDoc = await fetchRes.json();
+      const nameParts = createdDoc.name.split('/');
+      const docId = nameParts[nameParts.length - 1];
+      
       res.json({ id: docId });
     } catch (err: any) {
       console.error("addDoc error:", err);
@@ -390,21 +523,29 @@ Please reply to the customer's last message as the "Global Nexis Smart AI Suppor
   app.post("/api/db/setDoc", async (req, res) => {
     const { path: docPath, id, data, options } = req.body;
     try {
-      if (!serverDb) throw new Error("Firebase DB is not initialized on the server.");
+      if (!firestoreConfig) throw new Error("Firebase configuration not found.");
+      const { projectId, apiKey, firestoreDatabaseId } = firestoreConfig;
+      const dbId = firestoreDatabaseId || "(default)";
       const processedData = processServerTimestamps(data);
-
-      if (useAdminSdk) {
-        const docRef = serverDb.doc(`${docPath}/${id}`);
-        if (options && options.merge) {
-          await docRef.set(processedData, { merge: true });
-        } else {
-          await docRef.set(processedData);
-        }
-      } else {
-        const docRef = fsDoc(serverDb, docPath, id);
-        await fsSetDoc(docRef, processedData, options || {});
+      
+      let url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/${docPath}/${id}?key=${apiKey}`;
+      for (const key of Object.keys(processedData)) {
+        url += `&updateMask.fieldPaths=${key}`;
       }
-
+      
+      const fetchRes = await fetch(url, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fields: toFirestoreFields(processedData)
+        })
+      });
+      
+      if (!fetchRes.ok) {
+        const errorText = await fetchRes.text();
+        throw new Error(`Firestore REST API error: ${errorText}`);
+      }
+      
       res.json({ success: true });
     } catch (err: any) {
       console.error("setDoc error:", err);
@@ -416,17 +557,29 @@ Please reply to the customer's last message as the "Global Nexis Smart AI Suppor
   app.post("/api/db/updateDoc", async (req, res) => {
     const { path: docPath, id, data } = req.body;
     try {
-      if (!serverDb) throw new Error("Firebase DB is not initialized on the server.");
+      if (!firestoreConfig) throw new Error("Firebase configuration not found.");
+      const { projectId, apiKey, firestoreDatabaseId } = firestoreConfig;
+      const dbId = firestoreDatabaseId || "(default)";
       const processedData = processServerTimestamps(data);
-
-      if (useAdminSdk) {
-        const docRef = serverDb.doc(`${docPath}/${id}`);
-        await docRef.update(processedData);
-      } else {
-        const docRef = fsDoc(serverDb, docPath, id);
-        await fsUpdateDoc(docRef, processedData);
+      
+      let url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/${docPath}/${id}?key=${apiKey}`;
+      for (const key of Object.keys(processedData)) {
+        url += `&updateMask.fieldPaths=${key}`;
       }
-
+      
+      const fetchRes = await fetch(url, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fields: toFirestoreFields(processedData)
+        })
+      });
+      
+      if (!fetchRes.ok) {
+        const errorText = await fetchRes.text();
+        throw new Error(`Firestore REST API error: ${errorText}`);
+      }
+      
       res.json({ success: true });
     } catch (err: any) {
       console.error("updateDoc error:", err);
@@ -438,16 +591,21 @@ Please reply to the customer's last message as the "Global Nexis Smart AI Suppor
   app.post("/api/db/deleteDoc", async (req, res) => {
     const { path: docPath, id } = req.body;
     try {
-      if (!serverDb) throw new Error("Firebase DB is not initialized on the server.");
-
-      if (useAdminSdk) {
-        const docRef = serverDb.doc(`${docPath}/${id}`);
-        await docRef.delete();
-      } else {
-        const docRef = fsDoc(serverDb, docPath, id);
-        await fsDeleteDoc(docRef);
+      if (!firestoreConfig) throw new Error("Firebase configuration not found.");
+      const { projectId, apiKey, firestoreDatabaseId } = firestoreConfig;
+      const dbId = firestoreDatabaseId || "(default)";
+      
+      const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/${docPath}/${id}?key=${apiKey}`;
+      
+      const fetchRes = await fetch(url, {
+        method: 'DELETE'
+      });
+      
+      if (!fetchRes.ok && fetchRes.status !== 404) {
+        const errorText = await fetchRes.text();
+        throw new Error(`Firestore REST API error: ${errorText}`);
       }
-
+      
       res.json({ success: true });
     } catch (err: any) {
       console.error("deleteDoc error:", err);
