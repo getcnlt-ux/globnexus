@@ -3,8 +3,55 @@ import path from "path";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
+import { initializeApp } from 'firebase/app';
+import { initializeFirestore, collection as fsCollection, doc as fsDoc, getDoc as fsGetDoc, setDoc as fsSetDoc, addDoc as fsAddDoc, updateDoc as fsUpdateDoc, deleteDoc as fsDeleteDoc, getDocs as fsGetDocs, query as fsQuery, where as fsWhere, orderBy as fsOrderBy, limit as fsLimit, serverTimestamp as fsServerTimestamp } from 'firebase/firestore';
+import { getAuth, signInWithEmailAndPassword as nodeSignIn, createUserWithEmailAndPassword as nodeCreateUser, sendSignInLinkToEmail as nodeSendLink, signInWithEmailLink as nodeSignInLink } from 'firebase/auth';
+import fs from 'fs';
 
 dotenv.config();
+
+// Initialize Firebase on Server
+let firebaseApp: any;
+let serverDb: any;
+let serverAuth: any;
+
+try {
+  const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
+  if (fs.existsSync(configPath)) {
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    firebaseApp = initializeApp(config);
+    if (config.firestoreDatabaseId) {
+      serverDb = initializeFirestore(firebaseApp, {}, config.firestoreDatabaseId);
+    } else {
+      serverDb = initializeFirestore(firebaseApp, {});
+    }
+    serverAuth = getAuth(firebaseApp);
+    console.log("Server: Firebase initialized successfully");
+  } else {
+    console.warn("Server: firebase-applet-config.json not found");
+  }
+} catch (error) {
+  console.error("Server: Failed to initialize Firebase on server:", error);
+}
+
+function processServerTimestamps(data: any): any {
+  if (!data) return data;
+  if (Array.isArray(data)) {
+    return data.map(item => processServerTimestamps(item));
+  }
+  if (typeof data === 'object') {
+    const copy = { ...data };
+    for (const key of Object.keys(copy)) {
+      if (copy[key] === '__SERVER_TIMESTAMP__') {
+        copy[key] = fsServerTimestamp();
+      } else if (typeof copy[key] === 'object') {
+        copy[key] = processServerTimestamps(copy[key]);
+      }
+    }
+    return copy;
+  }
+  return data;
+}
 
 // Create Gemini client dynamically with lazy capability check
 let aiClient: GoogleGenAI | null = null;
@@ -215,6 +262,188 @@ Please reply to the customer's last message as the "Global Nexis Smart AI Suppor
     } catch (err: any) {
       console.error("Chatbot response error:", err);
       res.status(500).json({ error: err.message || "Failed to generate response" });
+    }
+  });
+
+  // DB & AUTH PROXY API ENDPOINTS (For GFW Bypass / Global Access)
+  
+  // 1. getDoc
+  app.post("/api/db/getDoc", async (req, res) => {
+    const { path: docPath, id } = req.body;
+    try {
+      if (!serverDb) throw new Error("Firebase DB is not initialized on the server.");
+      const docRef = fsDoc(serverDb, docPath, id);
+      const docSnap: any = await fsGetDoc(docRef);
+      if (docSnap.exists()) {
+        res.json({ id: docSnap.id, exists: true, data: docSnap.data() });
+      } else {
+        res.json({ id: docSnap.id, exists: false });
+      }
+    } catch (err: any) {
+      console.error("getDoc error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 2. getDocs
+  app.post("/api/db/getDocs", async (req, res) => {
+    const { path: collectionPath, constraints: reqConstraints } = req.body;
+    try {
+      if (!serverDb) throw new Error("Firebase DB is not initialized on the server.");
+      const colRef = fsCollection(serverDb, collectionPath);
+      const constraints: any[] = [];
+
+      if (reqConstraints && Array.isArray(reqConstraints)) {
+        for (const c of reqConstraints) {
+          if (c.type === 'where') {
+            constraints.push(fsWhere(c.fieldPath, c.opStr, c.value));
+          } else if (c.type === 'orderBy') {
+            constraints.push(fsOrderBy(c.fieldPath, c.directionStr || 'asc'));
+          } else if (c.type === 'limit') {
+            constraints.push(fsLimit(Number(c.limitNum)));
+          }
+        }
+      }
+
+      const q = fsQuery(colRef, ...constraints);
+      const querySnapshot = await fsGetDocs(q);
+      const docs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      res.json({ docs });
+    } catch (err: any) {
+      console.error("getDocs error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 3. addDoc
+  app.post("/api/db/addDoc", async (req, res) => {
+    const { path: collectionPath, data } = req.body;
+    try {
+      if (!serverDb) throw new Error("Firebase DB is not initialized on the server.");
+      const colRef = fsCollection(serverDb, collectionPath);
+      const processedData = processServerTimestamps(data);
+      const docRef = await fsAddDoc(colRef, processedData);
+      res.json({ id: docRef.id });
+    } catch (err: any) {
+      console.error("addDoc error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 4. setDoc
+  app.post("/api/db/setDoc", async (req, res) => {
+    const { path: docPath, id, data, options } = req.body;
+    try {
+      if (!serverDb) throw new Error("Firebase DB is not initialized on the server.");
+      const docRef = fsDoc(serverDb, docPath, id);
+      const processedData = processServerTimestamps(data);
+      await fsSetDoc(docRef, processedData, options || {});
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error("setDoc error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 5. updateDoc
+  app.post("/api/db/updateDoc", async (req, res) => {
+    const { path: docPath, id, data } = req.body;
+    try {
+      if (!serverDb) throw new Error("Firebase DB is not initialized on the server.");
+      const docRef = fsDoc(serverDb, docPath, id);
+      const processedData = processServerTimestamps(data);
+      await fsUpdateDoc(docRef, processedData);
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error("updateDoc error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 6. deleteDoc
+  app.post("/api/db/deleteDoc", async (req, res) => {
+    const { path: docPath, id } = req.body;
+    try {
+      if (!serverDb) throw new Error("Firebase DB is not initialized on the server.");
+      const docRef = fsDoc(serverDb, docPath, id);
+      await fsDeleteDoc(docRef);
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error("deleteDoc error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 7. Auth SignUp
+  app.post("/api/auth/signup", async (req, res) => {
+    const { email, password } = req.body;
+    try {
+      if (!serverAuth) throw new Error("Firebase Auth is not initialized on the server.");
+      const userCredential = await nodeCreateUser(serverAuth, email, password);
+      const user = userCredential.user;
+      res.json({
+        user: {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || email.split('@')[0]
+        }
+      });
+    } catch (err: any) {
+      console.error("signup error:", err);
+      res.status(400).json({ error: err.message, code: err.code });
+    }
+  });
+
+  // 8. Auth SignIn
+  app.post("/api/auth/signin", async (req, res) => {
+    const { email, password } = req.body;
+    try {
+      if (!serverAuth) throw new Error("Firebase Auth is not initialized on the server.");
+      const userCredential = await nodeSignIn(serverAuth, email, password);
+      const user = userCredential.user;
+      res.json({
+        user: {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || email.split('@')[0]
+        }
+      });
+    } catch (err: any) {
+      console.error("signin error:", err);
+      res.status(400).json({ error: err.message, code: err.code });
+    }
+  });
+
+  // 9. Auth sendSignInLink
+  app.post("/api/auth/sendSignInLink", async (req, res) => {
+    const { email, actionCodeSettings } = req.body;
+    try {
+      if (!serverAuth) throw new Error("Firebase Auth is not initialized on the server.");
+      await nodeSendLink(serverAuth, email, actionCodeSettings);
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error("sendSignInLink error:", err);
+      res.status(400).json({ error: err.message, code: err.code });
+    }
+  });
+
+  // 10. Auth signInWithLink
+  app.post("/api/auth/signInWithLink", async (req, res) => {
+    const { email, link } = req.body;
+    try {
+      if (!serverAuth) throw new Error("Firebase Auth is not initialized on the server.");
+      const userCredential = await nodeSignInLink(serverAuth, email, link);
+      const user = userCredential.user;
+      res.json({
+        user: {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || email.split('@')[0]
+        }
+      });
+    } catch (err: any) {
+      console.error("signInWithLink error:", err);
+      res.status(400).json({ error: err.message, code: err.code });
     }
   });
 

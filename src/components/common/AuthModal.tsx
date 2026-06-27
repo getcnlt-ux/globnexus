@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Mail, User, LogIn, UserPlus, AlertCircle, Eye, EyeOff, Shield } from 'lucide-react';
-import { sendSignInLinkToEmail } from 'firebase/auth';
 import { 
   signInWithPopup,
   GoogleAuthProvider,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword,
+  sendSignInLinkToEmail
 } from '../../lib/dbWrapper';
 import { auth } from '../../lib/firebase';
 

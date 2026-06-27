@@ -7,7 +7,7 @@ import { useAuth } from './AuthProvider';
 import AuthModal from './AuthModal';
 import LiveChat from './LiveChat';
 import { auth } from '../../lib/firebase';
-import { signOut } from 'firebase/auth';
+import { signOut } from '../../lib/dbWrapper';
 
 export default function ConsultationWidget() {
   const { t } = useTranslation();

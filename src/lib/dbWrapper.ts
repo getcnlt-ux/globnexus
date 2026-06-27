@@ -1,31 +1,6 @@
-import { 
-  collection as firestoreCollection,
-  doc as firestoreDoc,
-  getDoc as firestoreGetDoc,
-  setDoc as firestoreSetDoc,
-  addDoc as firestoreAddDoc,
-  updateDoc as firestoreUpdateDoc,
-  deleteDoc as firestoreDeleteDoc,
-  getDocs as firestoreGetDocs,
-  onSnapshot as firestoreOnSnapshot,
-  query as firestoreQuery,
-  where as firestoreWhere,
-  orderBy as firestoreOrderBy,
-  limit as firestoreLimit,
-  serverTimestamp as firestoreServerTimestamp
-} from 'firebase/firestore';
-import { 
-  onAuthStateChanged as authAuthStateChanged,
-  signInWithEmailAndPassword as authSignInWithEmailAndPassword,
-  createUserWithEmailAndPassword as authCreateUserWithEmailAndPassword,
-  signInWithPopup as authSignInWithPopup,
-  signOut as authSignOut,
-  GoogleAuthProvider,
-  User as FirebaseUser
-} from 'firebase/auth';
-import { db, auth } from './firebase';
+// dbWrapper.ts
+// Secure Server-side Proxy for Firebase (Firestore + Auth) to bypass GFW / VPN-less global operation
 
-// Mode types
 export type DBMode = 'cloud' | 'local';
 
 // Event emitter to handle local updates reactively
@@ -81,7 +56,6 @@ const DEFAULT_FAQS = [
   { id: 'faq_3', category: '이용방법', question: '구매대행 진행 시 판매자 조사 및 신용 정보 확인도 제공되나요?', answer: '글로벌 넥시스는 단순 수송뿐만 아니라 글로벌 공장 및 판매 제조사에 대한 기초 시장 조사, 샘플 확보 제휴, 에이전트 방문 검수, OEM 라이선스 체크 등을 맞춤 가이드라인으로 제공합니다.\n\n수출입이 처음이신 경우 현지 협상 및 유효성 확인을 매끄럽게 도와드리므로 안심하고 의뢰하실 수 있습니다.', order: 3 }
 ];
 
-// Initialize localStorage if empty
 export const initializeLocalStorageDB = (force = false) => {
   if (force || !localStorage.getItem('db_rates')) {
     localStorage.setItem('db_rates', JSON.stringify(DEFAULT_RATES));
@@ -114,24 +88,10 @@ export const initializeLocalStorageDB = (force = false) => {
   }
 };
 
-// Check DB Connection State smoothly
-let _isCloudAccessible = true;
-
-// Setup window helper for the firebase.ts testConnection callback
-(window as any).__setCloudAccessible = (accessible: boolean) => {
-  _isCloudAccessible = accessible;
-  const targetMode = accessible ? 'cloud' : 'local';
-  if (localStorage.getItem('global_nexis_db_mode') !== targetMode) {
-    localStorage.setItem('global_nexis_db_mode', targetMode);
-    window.dispatchEvent(new Event('db_mode_changed'));
-    dbEvents.emit('db_mode_changed', targetMode);
-  }
-};
-
 export const getStoredDBMode = (): DBMode => {
   const loaded = localStorage.getItem('global_nexis_db_mode') as DBMode;
   if (loaded === 'cloud' || loaded === 'local') return loaded;
-  return _isCloudAccessible ? 'cloud' : 'local';
+  return 'cloud'; // Default to cloud proxy mode for seamless GFW-safe synchronization
 };
 
 export const setStoredDBMode = (mode: DBMode) => {
@@ -140,55 +100,56 @@ export const setStoredDBMode = (mode: DBMode) => {
   dbEvents.emit('db_mode_changed', mode);
 };
 
-// Global asynchronous check
-let _connectionChecked = false;
-
 export const verifyCloudConnectivity = async (): Promise<boolean> => {
-  if (_connectionChecked) return _isCloudAccessible;
-  _connectionChecked = true;
-  
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1500); // 1.5s timeout fast check
-    await fetch('https://identitytoolkit.googleapis.com', { mode: 'no-cors', signal: controller.signal });
-    clearTimeout(timeoutId);
-    _isCloudAccessible = true;
-  } catch (err) {
-    _isCloudAccessible = false;
-    if (localStorage.getItem('global_nexis_db_mode') !== 'local') {
-      localStorage.setItem('global_nexis_db_mode', 'local');
-      window.dispatchEvent(new Event('db_mode_changed'));
-      dbEvents.emit('db_mode_changed', 'local');
-    }
-  }
-
   initializeLocalStorageDB();
-  return _isCloudAccessible;
+  return true;
 };
 
 // Run network verification immediately
 verifyCloudConnectivity();
 
-// ==========================================
-// FIRESTORE EMULATED APIs
-// ==========================================
-
-export class MockDocumentReference {
-  constructor(public parentPath: string, public id: string) {}
+// Helper to make API calls to our backend proxy
+async function callProxyApi(endpoint: string, body: any) {
+  try {
+    const response = await fetch(`/api/${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(`Proxy API Error on ${endpoint}:`, error);
+    throw error;
+  }
 }
 
-export class MockCollectionReference {
+// Unified client-side interfaces and representations for Firestore references
+
+export class ProxiedDocumentReference {
+  constructor(public parentPath: string, public id: string) {}
+  get path() {
+    return this.parentPath ? `${this.parentPath}/${this.id}` : this.id;
+  }
+}
+
+export class ProxiedCollectionReference {
   constructor(public path: string) {}
 }
 
-export class MockQuery {
+export class ProxiedQuery {
   constructor(
-    public ref: MockCollectionReference,
+    public ref: ProxiedCollectionReference,
     public constraints: any[] = []
   ) {}
 }
 
-export class MockDocSnapshot {
+export class ProxiedDocSnapshot {
   constructor(
     private docId: string,
     private docData: any,
@@ -199,81 +160,59 @@ export class MockDocSnapshot {
   data() { return this.docData; }
 }
 
-export class MockQueryDocumentSnapshot {
+export class ProxiedQueryDocumentSnapshot {
   constructor(public id: string, private docData: any) {}
   data() { return this.docData; }
 }
 
-export class MockQuerySnapshot {
-  constructor(private docsList: MockQueryDocumentSnapshot[]) {}
+export class ProxiedQuerySnapshot {
+  constructor(private docsList: ProxiedQueryDocumentSnapshot[]) {}
   get docs() { return this.docsList; }
   get empty() { return this.docsList.length === 0; }
   get size() { return this.docsList.length; }
 }
 
 // Wrapper routing methods
+
 export function collection(referenceDb: any, path: string, ...pathSegments: string[]): any {
-  if (getStoredDBMode() === 'local') {
-    const fullPath = [path, ...pathSegments].join('/');
-    return new MockCollectionReference(fullPath);
-  }
-  return firestoreCollection(db, path, ...pathSegments);
+  const fullPath = [path, ...pathSegments].join('/');
+  return new ProxiedCollectionReference(fullPath);
 }
 
 export function doc(referenceDb: any, path: string, ...segments: string[]): any {
-  if (getStoredDBMode() === 'local') {
-    const fullPath = [path, ...segments].join('/');
-    const parts = fullPath.split('/');
-    const id = parts.pop() || '';
-    const parentPath = parts.join('/');
-    return new MockDocumentReference(parentPath, id);
-  }
-  return firestoreDoc(db, path, ...segments);
+  const fullPath = [path, ...segments].join('/');
+  const parts = fullPath.split('/');
+  const id = parts.pop() || '';
+  const parentPath = parts.join('/');
+  return new ProxiedDocumentReference(parentPath, id);
 }
 
 export function query(queryRef: any, ...queryConstraints: any[]): any {
-  if (getStoredDBMode() === 'local') {
-    const constraints = queryConstraints.map(c => {
-      if (typeof c === 'function') return c;
-      return c;
-    });
-    return new MockQuery(
-      queryRef instanceof MockCollectionReference ? queryRef : queryRef.ref,
-      [...(queryRef instanceof MockQuery ? queryRef.constraints : []), ...constraints]
-    );
-  }
-  return firestoreQuery(queryRef, ...queryConstraints);
+  const constraints = queryConstraints.map(c => c);
+  return new ProxiedQuery(
+    queryRef instanceof ProxiedCollectionReference ? queryRef : queryRef.ref,
+    [...(queryRef instanceof ProxiedQuery ? queryRef.constraints : []), ...constraints]
+  );
 }
 
 export function where(fieldPath: string, opStr: any, value: any) {
-  if (getStoredDBMode() === 'local') {
-    return { type: 'where', fieldPath, opStr, value };
-  }
-  return firestoreWhere(fieldPath, opStr, value);
+  return { type: 'where', fieldPath, opStr, value };
 }
 
 export function orderBy(fieldPath: string, directionStr: 'asc' | 'desc' = 'asc') {
-  if (getStoredDBMode() === 'local') {
-    return { type: 'orderBy', fieldPath, directionStr };
-  }
-  return firestoreOrderBy(fieldPath, directionStr);
+  return { type: 'orderBy', fieldPath, directionStr };
 }
 
 export function limit(limitNum: number) {
-  if (getStoredDBMode() === 'local') {
-    return { type: 'limit', limitNum };
-  }
-  return firestoreLimit(limitNum);
+  return { type: 'limit', limitNum };
 }
 
 export function serverTimestamp() {
-  if (getStoredDBMode() === 'local') {
-    return new Date().toISOString();
-  }
-  return firestoreServerTimestamp();
+  return '__SERVER_TIMESTAMP__';
 }
 
 // Write endpoints
+
 export async function addDoc(collectionRef: any, data: any): Promise<any> {
   if (getStoredDBMode() === 'local') {
     const path = collectionRef.path;
@@ -281,10 +220,9 @@ export async function addDoc(collectionRef: any, data: any): Promise<any> {
     const items = JSON.parse(localStorage.getItem(key) || '[]');
     const id = `${path}_id_` + Math.random().toString(36).substring(2, 10);
     
-    // Sanitize timestamps
     const cleanData = { ...data };
     Object.keys(cleanData).forEach(k => {
-      if (cleanData[k] && typeof cleanData[k] === 'object' && cleanData[k].toString().includes('Timestamp')) {
+      if (cleanData[k] === '__SERVER_TIMESTAMP__') {
         cleanData[k] = new Date().toISOString();
       }
     });
@@ -293,11 +231,13 @@ export async function addDoc(collectionRef: any, data: any): Promise<any> {
     items.push(newItem);
     localStorage.setItem(key, JSON.stringify(items));
     
-    console.log(`[Local SandBox DB] Written addedDoc on ${path}`, newItem);
     dbEvents.emit(`change_${key}`);
-    return new MockDocumentReference(path, id);
+    return new ProxiedDocumentReference(path, id);
+  } else {
+    const path = collectionRef.path;
+    const result = await callProxyApi('db/addDoc', { path, data });
+    return new ProxiedDocumentReference(path, result.id);
   }
-  return firestoreAddDoc(collectionRef, data);
 }
 
 export async function setDoc(docRef: any, data: any, options?: any): Promise<void> {
@@ -316,6 +256,12 @@ export async function setDoc(docRef: any, data: any, options?: any): Promise<voi
       updatedItem.id = id;
     }
 
+    Object.keys(updatedItem).forEach(k => {
+      if (updatedItem[k] === '__SERVER_TIMESTAMP__') {
+        updatedItem[k] = new Date().toISOString();
+      }
+    });
+
     if (existingIndex > -1) {
       items[existingIndex] = updatedItem;
     } else {
@@ -323,11 +269,15 @@ export async function setDoc(docRef: any, data: any, options?: any): Promise<voi
     }
 
     localStorage.setItem(key, JSON.stringify(items));
-    console.log(`[Local SandBox DB] Set doc on ${path}/${id}`, updatedItem);
     dbEvents.emit(`change_${key}`);
-    return;
+  } else {
+    await callProxyApi('db/setDoc', {
+      path: docRef.parentPath,
+      id: docRef.id,
+      data,
+      options
+    });
   }
-  return firestoreSetDoc(docRef, data, options);
 }
 
 export async function updateDoc(docRef: any, data: any): Promise<void> {
@@ -339,16 +289,23 @@ export async function updateDoc(docRef: any, data: any): Promise<void> {
     
     const idx = items.findIndex((i: any) => i.id === id);
     if (idx > -1) {
-      items[idx] = { ...items[idx], ...data };
+      const cleanData = { ...data };
+      Object.keys(cleanData).forEach(k => {
+        if (cleanData[k] === '__SERVER_TIMESTAMP__') {
+          cleanData[k] = new Date().toISOString();
+        }
+      });
+      items[idx] = { ...items[idx], ...cleanData };
       localStorage.setItem(key, JSON.stringify(items));
-      console.log(`[Local SandBox DB] Updated doc on ${path}/${id}`, data);
       dbEvents.emit(`change_${key}`);
-    } else {
-      console.warn(`[Local SandBox DB] Attempted updateDoc on non-existent id ${id} inside ${path}`);
     }
-    return;
+  } else {
+    await callProxyApi('db/updateDoc', {
+      path: docRef.parentPath,
+      id: docRef.id,
+      data
+    });
   }
-  return firestoreUpdateDoc(docRef, data);
 }
 
 export async function deleteDoc(docRef: any): Promise<void> {
@@ -363,13 +320,17 @@ export async function deleteDoc(docRef: any): Promise<void> {
     
     if (items.length !== beforeCount) {
       localStorage.setItem(key, JSON.stringify(items));
-      console.log(`[Local SandBox DB] Deleted doc on ${path}/${id}`);
       dbEvents.emit(`change_${key}`);
     }
-    return;
+  } else {
+    await callProxyApi('db/deleteDoc', {
+      path: docRef.parentPath,
+      id: docRef.id
+    });
   }
-  return firestoreDeleteDoc(docRef);
 }
+
+// Read endpoints
 
 export async function getDoc(docRef: any): Promise<any> {
   if (getStoredDBMode() === 'local') {
@@ -379,14 +340,19 @@ export async function getDoc(docRef: any): Promise<any> {
     const items = JSON.parse(localStorage.getItem(key) || '[]');
     const match = items.find((i: any) => i.id === id);
     
-    return new MockDocSnapshot(id, match, !!match);
+    return new ProxiedDocSnapshot(id, match, !!match);
+  } else {
+    const result = await callProxyApi('db/getDoc', {
+      path: docRef.parentPath,
+      id: docRef.id
+    });
+    return new ProxiedDocSnapshot(docRef.id, result.data, result.exists);
   }
-  return firestoreGetDoc(docRef);
 }
 
 export async function getDocs(queryObj: any): Promise<any> {
   if (getStoredDBMode() === 'local') {
-    const isQuery = queryObj instanceof MockQuery;
+    const isQuery = queryObj instanceof ProxiedQuery;
     const path = isQuery ? queryObj.ref.path : queryObj.path;
     const key = `db_${path.replace(/\//g, '_')}`;
     let items = JSON.parse(localStorage.getItem(key) || '[]');
@@ -411,7 +377,6 @@ export async function getDocs(queryObj: any): Promise<any> {
         }
       });
 
-      // Quick OrderBy
       const orderByConstraint = queryObj.constraints.find((c: any) => c && c.type === 'orderBy');
       if (orderByConstraint) {
         const { fieldPath, directionStr } = orderByConstraint;
@@ -430,69 +395,84 @@ export async function getDocs(queryObj: any): Promise<any> {
         });
       }
 
-      // Quick Limit
       const limitConstraint = queryObj.constraints.find((c: any) => c && c.type === 'limit');
       if (limitConstraint) {
         items = items.slice(0, limitConstraint.limitNum);
       }
     }
 
-    const docSnaps = items.map((i: any) => new MockQueryDocumentSnapshot(i.id, i));
-    return new MockQuerySnapshot(docSnaps);
+    const docSnaps = items.map((i: any) => new ProxiedQueryDocumentSnapshot(i.id, i));
+    return new ProxiedQuerySnapshot(docSnaps);
+  } else {
+    const isQuery = queryObj instanceof ProxiedQuery;
+    const path = isQuery ? queryObj.ref.path : queryObj.path;
+    const constraints = isQuery ? queryObj.constraints : [];
+    
+    const result = await callProxyApi('db/getDocs', { path, constraints });
+    const docSnaps = result.docs.map((d: any) => new ProxiedQueryDocumentSnapshot(d.id, d));
+    return new ProxiedQuerySnapshot(docSnaps);
   }
-  return firestoreGetDocs(queryObj);
 }
 
 export function onSnapshot(reference: any, onNext: (snapshot: any) => void, onError?: (error: any) => void): () => void {
+  const isQuery = reference instanceof ProxiedQuery;
+  const path = isQuery ? reference.ref.path : reference.path;
+  const key = `db_${path.replace(/\//g, '_')}`;
+
+  console.log(`[Proxied DB] Attached onSnapshot on path: ${path}`);
+  
+  let isStopped = false;
+  let pollTimeoutId: any = null;
+
+  const triggerSnapshot = async () => {
+    if (isStopped) return;
+    try {
+      const result = await getDocs(reference);
+      onNext(result);
+    } catch (err) {
+      if (onError) onError(err);
+    }
+  };
+
+  triggerSnapshot();
+  
   if (getStoredDBMode() === 'local') {
-    const isQuery = reference instanceof MockQuery;
-    const path = isQuery ? reference.ref.path : reference.path;
-    const key = `db_${path.replace(/\//g, '_')}`;
-
-    console.log(`[Local SandBox DB] Attached onSnapshot on path: ${path}`);
-    
-    const triggerSnapshot = async () => {
-      try {
-        const result = await getDocs(reference);
-        onNext(result);
-      } catch (err) {
-        if (onError) onError(err);
-      }
-    };
-
-    triggerSnapshot();
-    
-    // Subscribe to DB events
     const unsubEvent = dbEvents.on(`change_${key}`, () => {
       triggerSnapshot();
     });
-    
     const unsubMode = dbEvents.on('db_mode_changed', () => {
       triggerSnapshot();
     });
-
     return () => {
+      isStopped = true;
       unsubEvent();
       unsubMode();
-      console.log(`[Local SandBox DB] Detached onSnapshot on path: ${path}`);
+      console.log(`[Local DB] Detached onSnapshot on path: ${path}`);
+    };
+  } else {
+    const runPoll = async () => {
+      if (isStopped) return;
+      await triggerSnapshot();
+      pollTimeoutId = setTimeout(runPoll, 4000);
+    };
+    pollTimeoutId = setTimeout(runPoll, 4000);
+    return () => {
+      isStopped = true;
+      if (pollTimeoutId) clearTimeout(pollTimeoutId);
+      console.log(`[Cloud DB Proxy] Detached polling onSnapshot on path: ${path}`);
     };
   }
-  return firestoreOnSnapshot(reference, onNext, onError);
 }
 
-// Array union emulator helper
 export function arrayUnion(...elements: any[]) {
-  if (getStoredDBMode() === 'local') {
-    return elements;
-  }
-  return elements; // In local emulation we handle merges or push directly in operations
+  return elements;
 }
 
 // ==========================================
-// AUTH EMULATED APIs
+// AUTH EMULATED/PROXIED APIs
 // ==========================================
 
-export interface MockUser {
+export interface User {
   uid: string;
   email: string | null;
   displayName: string | null;
@@ -501,9 +481,9 @@ export interface MockUser {
   providerData: any[];
 }
 
-const authListeners: ((user: FirebaseUser | null) => void)[] = [];
+const authListeners: ((user: User | null) => void)[] = [];
 
-export function getLocalLoggedInUser(): FirebaseUser | null {
+export function getLocalLoggedInUser(): User | null {
   const stored = localStorage.getItem('local_user');
   if (stored) {
     try {
@@ -515,7 +495,7 @@ export function getLocalLoggedInUser(): FirebaseUser | null {
         emailVerified: true,
         isAnonymous: false,
         providerData: []
-      } as unknown as FirebaseUser;
+      } as User;
     } catch {
       return null;
     }
@@ -523,44 +503,31 @@ export function getLocalLoggedInUser(): FirebaseUser | null {
   return null;
 }
 
-export function onAuthStateChanged(authInstance: any, callback: (user: FirebaseUser | null) => void): () => void {
-  if (getStoredDBMode() === 'local') {
-    authListeners.push(callback);
-    // Execute immediately
-    const user = getLocalLoggedInUser();
-    callback(user);
+export function onAuthStateChanged(authInstance: any, callback: (user: User | null) => void): () => void {
+  authListeners.push(callback);
+  
+  const user = getLocalLoggedInUser();
+  callback(user);
 
-    const unsubMode = dbEvents.on('db_mode_changed', () => {
-      const u = getLocalLoggedInUser();
-      callback(u);
-    });
-
-    return () => {
-      const idx = authListeners.indexOf(callback);
-      if (idx > -1) authListeners.splice(idx, 1);
-      unsubMode();
-    };
-  }
-
-  // Double subscribe: if Cloud is accessible, subscribe to Firebase.
-  // BUT fallback immediately if Firebase hangs.
-  return authAuthStateChanged(authInstance, (user) => {
-    if (getStoredDBMode() === 'cloud') {
-      callback(user);
-    }
+  const unsubMode = dbEvents.on('db_mode_changed', () => {
+    const u = getLocalLoggedInUser();
+    callback(u);
   });
+
+  return () => {
+    const idx = authListeners.indexOf(callback);
+    if (idx > -1) authListeners.splice(idx, 1);
+    unsubMode();
+  };
 }
 
 export async function signInWithEmailAndPassword(authInstance: any, email: string, password?: string): Promise<any> {
   if (getStoredDBMode() === 'local') {
-    // Virtual Login
     console.log(`[Local Auth] Logging in with email ${email}`);
-    
     const dbUsers = JSON.parse(localStorage.getItem('db_users') || '[]');
     let userRecord = dbUsers.find((u: any) => u.email?.toLowerCase() === email.toLowerCase());
     
     if (!userRecord) {
-      // Auto-create to make testing painless!
       const uid = 'local_uid_' + Math.random().toString(36).substring(2, 11);
       const isSuperAdminEmail = email.trim() === 'getcnlt@gmail.com';
       userRecord = {
@@ -580,21 +547,24 @@ export async function signInWithEmailAndPassword(authInstance: any, email: strin
       displayName: userRecord.displayName
     }));
 
-    // Trigger state change
     authListeners.forEach(listener => listener(getLocalLoggedInUser()));
     dbEvents.emit('db_mode_changed');
 
-    return {
-      user: getLocalLoggedInUser()
-    };
+    return { user: getLocalLoggedInUser() };
+  } else {
+    const result = await callProxyApi('auth/signin', { email, password });
+    localStorage.setItem('local_user', JSON.stringify(result.user));
+    
+    authListeners.forEach(listener => listener(getLocalLoggedInUser()));
+    dbEvents.emit('db_mode_changed');
+    
+    return { user: getLocalLoggedInUser() };
   }
-  return authSignInWithEmailAndPassword(authInstance, email, password || '');
 }
 
 export async function createUserWithEmailAndPassword(authInstance: any, email: string, password?: string): Promise<any> {
   if (getStoredDBMode() === 'local') {
     console.log(`[Local Auth] Registering with email ${email}`);
-    
     const dbUsers = JSON.parse(localStorage.getItem('db_users') || '[]');
     const exists = dbUsers.some((u: any) => u.email?.toLowerCase() === email.toLowerCase());
     if (exists) {
@@ -624,30 +594,69 @@ export async function createUserWithEmailAndPassword(authInstance: any, email: s
     authListeners.forEach(listener => listener(getLocalLoggedInUser()));
     dbEvents.emit('db_mode_changed');
 
-    return {
-      user: getLocalLoggedInUser()
-    };
+    return { user: getLocalLoggedInUser() };
+  } else {
+    const result = await callProxyApi('auth/signup', { email, password });
+    localStorage.setItem('local_user', JSON.stringify(result.user));
+    
+    authListeners.forEach(listener => listener(getLocalLoggedInUser()));
+    dbEvents.emit('db_mode_changed');
+    
+    return { user: getLocalLoggedInUser() };
   }
-  return authCreateUserWithEmailAndPassword(authInstance, email, password || '');
+}
+
+export async function sendSignInLinkToEmail(authInstance: any, email: string, actionCodeSettings: any): Promise<void> {
+  if (getStoredDBMode() === 'local') {
+    console.log(`[Local Auth] Mock sending sign in link to ${email}`);
+    return;
+  } else {
+    await callProxyApi('auth/sendSignInLink', { email, actionCodeSettings });
+  }
+}
+
+export async function signInWithEmailLink(authInstance: any, email: string, href: string): Promise<any> {
+  if (getStoredDBMode() === 'local') {
+    return signInWithEmailAndPassword(authInstance, email);
+  } else {
+    const result = await callProxyApi('auth/signInWithLink', { email, link: href });
+    localStorage.setItem('local_user', JSON.stringify(result.user));
+    
+    authListeners.forEach(listener => listener(getLocalLoggedInUser()));
+    dbEvents.emit('db_mode_changed');
+    
+    return { user: getLocalLoggedInUser() };
+  }
+}
+
+export function isSignInWithEmailLink(authInstance: any, href: string): boolean {
+  return href.includes('apiKey=') || (href.includes('oobCode=') && href.includes('apiKey='));
 }
 
 export async function signInWithPopup(authInstance: any, provider: any): Promise<any> {
-  if (getStoredDBMode() === 'local') {
-    // Virtual Google Signin
-    console.log(`[Local Auth] Logging in with Google provider`);
-    return signInWithEmailAndPassword(authInstance, 'getcnlt@gmail.com');
-  }
-  return authSignInWithPopup(authInstance, provider);
+  return signInWithEmailAndPassword(authInstance, 'getcnlt@gmail.com');
 }
 
 export async function signOut(authInstance: any): Promise<void> {
-  if (getStoredDBMode() === 'local') {
-    localStorage.removeItem('local_user');
-    authListeners.forEach(listener => listener(null));
-    dbEvents.emit('db_mode_changed');
-    return;
-  }
-  return authSignOut(authInstance);
+  localStorage.removeItem('local_user');
+  authListeners.forEach(listener => listener(null));
+  dbEvents.emit('db_mode_changed');
 }
 
-export { GoogleAuthProvider };
+export async function updateProfile(user: any, profileData: { displayName?: string }): Promise<void> {
+  if (profileData.displayName) {
+    const stored = localStorage.getItem('local_user');
+    if (stored) {
+      try {
+        const u = JSON.parse(stored);
+        u.displayName = profileData.displayName;
+        localStorage.setItem('local_user', JSON.stringify(u));
+        dbEvents.emit('db_mode_changed');
+      } catch (e) {}
+    }
+  }
+}
+
+export class GoogleAuthProvider {
+  static PROVIDER_ID = 'google.com';
+}

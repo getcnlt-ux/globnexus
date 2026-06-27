@@ -3,9 +3,12 @@ import {
   User, 
   isSignInWithEmailLink, 
   signInWithEmailLink, 
-  updateProfile 
-} from 'firebase/auth';
-import { onAuthStateChanged, doc, getDoc, setDoc } from '../../lib/dbWrapper';
+  updateProfile,
+  onAuthStateChanged, 
+  doc, 
+  getDoc, 
+  setDoc 
+} from '../../lib/dbWrapper';
 import { auth, db } from '../../lib/firebase';
 
 interface UserProfile {

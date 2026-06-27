@@ -8,7 +8,7 @@ import { useAuth } from '../common/AuthProvider';
 import { useTheme } from '../common/ThemeProvider';
 import AuthModal from '../common/AuthModal';
 import { auth } from '../../lib/firebase';
-import { signOut } from 'firebase/auth';
+import { signOut } from '../../lib/dbWrapper';
 
 const languages = [
   { code: 'ko', name: 'KR' },
