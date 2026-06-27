@@ -5,7 +5,7 @@ import {
   collection, 
   addDoc, 
   serverTimestamp 
-} from 'firebase/firestore';
+} from '../../lib/dbWrapper';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../components/common/AuthProvider';
 import { useTranslation } from 'react-i18next';

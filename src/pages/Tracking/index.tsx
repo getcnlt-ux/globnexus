@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Search, Package, MapPin, Clock, CheckCircle2, Truck, Ship, Globe, ChevronRight, List } from 'lucide-react';
 import { useAuth } from '../../components/common/AuthProvider';
 import { db } from '../../lib/firebase';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit } from '../../lib/dbWrapper';
 import { format } from 'date-fns';
 import { auth } from '../../lib/firebase';
 

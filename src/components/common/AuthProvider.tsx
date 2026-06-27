@@ -1,12 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
-  onAuthStateChanged, 
   User, 
   isSignInWithEmailLink, 
   signInWithEmailLink, 
   updateProfile 
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { onAuthStateChanged, doc, getDoc, setDoc } from '../../lib/dbWrapper';
 import { auth, db } from '../../lib/firebase';
 
 interface UserProfile {

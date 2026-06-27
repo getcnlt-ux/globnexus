@@ -15,7 +15,7 @@ import {
   where,
   limit,
   updateDoc
-} from 'firebase/firestore';
+} from '../../lib/dbWrapper';
 import { db } from '../../lib/firebase';
 import { useAuth } from './AuthProvider';
 import { cn } from '../../lib/utils';

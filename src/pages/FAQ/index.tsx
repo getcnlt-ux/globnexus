@@ -3,7 +3,7 @@ import { Plus, Minus, Plane, Anchor, Clock, Percent, DollarSign, Globe, Info, Se
 import { motion, AnimatePresence } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { db } from '../../lib/firebase';
-import { collection, query, onSnapshot } from 'firebase/firestore';
+import { collection, query, onSnapshot } from '../../lib/dbWrapper';
 import { cn } from '../../lib/utils';
 
 interface Rate {

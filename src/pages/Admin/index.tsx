@@ -22,7 +22,7 @@ import {
   Trash2,
   Globe
 } from 'lucide-react';
-import { collection, query, onSnapshot, orderBy, updateDoc, doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, onSnapshot, orderBy, updateDoc, doc, deleteDoc } from '../../lib/dbWrapper';
 import { db } from '../../lib/firebase';
 import AdminChatList from './AdminChatList';
 import UserManager from './UserManager';

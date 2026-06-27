@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { db } from '../../lib/firebase';
-import { collection, query, onSnapshot, updateDoc, doc, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, onSnapshot, updateDoc, doc, addDoc, deleteDoc, serverTimestamp } from '../../lib/dbWrapper';
 import { Search, Globe, Plane, Anchor, Edit2, Trash2, Plus, X, Percent, Clock, DollarSign, AlertCircle, RefreshCw } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../components/common/AuthProvider';

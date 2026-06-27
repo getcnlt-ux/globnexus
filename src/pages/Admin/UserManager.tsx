@@ -23,7 +23,7 @@ import {
   deleteDoc,
   addDoc,
   serverTimestamp
-} from 'firebase/firestore';
+} from '../../lib/dbWrapper';
 import { db } from '../../lib/firebase';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../components/common/AuthProvider';

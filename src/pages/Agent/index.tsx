@@ -17,7 +17,7 @@ import {
   where, 
   onSnapshot, 
   orderBy 
-} from 'firebase/firestore';
+} from '../../lib/dbWrapper';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../components/common/AuthProvider';
 import { cn } from '../../lib/utils';

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { db } from '../../lib/firebase';
-import { collection, query, onSnapshot, orderBy, updateDoc, doc, addDoc, serverTimestamp, arrayUnion } from 'firebase/firestore';
+import { collection, query, onSnapshot, orderBy, updateDoc, doc, addDoc, serverTimestamp, arrayUnion } from '../../lib/dbWrapper';
 import { Search, MapPin, Truck, Save, X, Edit2, Plus, Package } from 'lucide-react';
 import { cn } from '../../lib/utils';
 

@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Mail, User, LogIn, UserPlus, AlertCircle, Eye, EyeOff, Shield } from 'lucide-react';
+import { sendSignInLinkToEmail } from 'firebase/auth';
 import { 
-  sendSignInLinkToEmail,
   signInWithPopup,
   GoogleAuthProvider,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword
-} from 'firebase/auth';
+} from '../../lib/dbWrapper';
 import { auth } from '../../lib/firebase';
 
 interface AuthModalProps {

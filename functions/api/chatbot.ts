@@ -2,6 +2,13 @@ interface Env {
   GEMINI_API_KEY?: string;
 }
 
+type PagesFunction<T = any> = (context: {
+  request: Request;
+  env: T;
+  next: () => Promise<Response>;
+  data: any;
+}) => Promise<Response>;
+
 export const onRequest: PagesFunction<Env> = async (context) => {
   if (context.request.method !== "POST") {
     return new Response("Method Not Allowed", { status: 405 });
