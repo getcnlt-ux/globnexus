@@ -74,6 +74,8 @@ export default function ConsultationWidget() {
                       setShowLiveChat(true);
                       setIsOpen(false);
                     }
+                  } else if (option.id === 'email') {
+                    window.location.href = 'mailto:contact@glob-nexis.com';
                   } else {
                     console.log(`Consultation via ${option.id}`);
                   }

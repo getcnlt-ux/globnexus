@@ -40,8 +40,14 @@ export default function Footer() {
         <div>
           <h4 className="font-display font-semibold mb-6 uppercase text-sm tracking-widest text-zinc-500 dark:text-zinc-400">{t('footer.contact')}</h4>
           <ul className="space-y-4 text-base text-zinc-600 dark:text-zinc-300">
-            <li className="flex items-center gap-3"><Mail className="w-4 h-4 text-blue-500" /> contact@globalnexis.com</li>
-            <li className="flex items-center gap-3"><Phone className="w-4 h-4 text-blue-500" /> +82 (0)10-0000-0000</li>
+            <li className="flex items-center gap-3">
+              <Mail className="w-4 h-4 text-blue-500" />
+              <a href="mailto:contact@glob-nexis.com" className="hover:text-blue-500 transition-colors">contact@glob-nexis.com</a>
+            </li>
+            <li className="flex items-center gap-3">
+              <Phone className="w-4 h-4 text-blue-500" />
+              <a href="tel:+821027461240" className="hover:text-blue-500 transition-colors">+82 (0)10-2746-1240</a>
+            </li>
             <li className="flex items-center gap-3"><MapPin className="w-4 h-4 text-blue-500" /> {t('footer.address')}</li>
           </ul>
         </div>
