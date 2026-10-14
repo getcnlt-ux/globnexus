@@ -1,19 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLocation } from 'react-router-dom';
-import { 
-  collection, 
-  addDoc, 
-  serverTimestamp 
-} from '../../lib/dbWrapper';
-import { db } from '../../lib/firebase';
-import { useAuth } from '../../components/common/AuthProvider';
 import { useTranslation } from 'react-i18next';
 import { 
   ArrowRight, 
   ChevronLeft, 
   CheckCircle2, 
-  ExternalLink, 
   Truck, 
   ShoppingCart, 
   ShieldCheck, 
@@ -26,48 +18,29 @@ import {
   Globe,
   Plane,
   Ship,
-  Train
+  Train,
+  Copy
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { ServiceType, ConsultationData, ConsultationStatus } from '../../types';
+import { ServiceType } from '../../types';
 
 type Step = 'entry' | 'service' | 'details' | 'info' | 'success';
 
 export default function Apply() {
   const { t } = useTranslation();
   const location = useLocation();
-  const { user } = useAuth();
   const [step, setStep] = useState<Step>('service');
   const [serviceType, setServiceType] = useState<ServiceType | null>(null);
   const [formData, setFormData] = useState<any>({});
   const [inquiryId, setInquiryId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Handle pre-selected service type from navigation state
   useEffect(() => {
     if (location.state?.serviceType) {
       setServiceType(location.state.serviceType as ServiceType);
       setStep('details');
     }
   }, [location.state]);
-
-  // Generate a random inquiry ID
-  useEffect(() => {
-    if (step === 'success') {
-      const id = 'GB-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-      setInquiryId(id);
-      
-      const submission = {
-        id,
-        serviceType,
-        ...formData,
-        status: 'received',
-        createdAt: Date.now()
-      };
-      const existing = JSON.parse(localStorage.getItem('gb_consultations') || '[]');
-      localStorage.setItem('gb_consultations', JSON.stringify([...existing, submission]));
-    }
-  }, [step]);
 
   const handleServiceSelect = (type: ServiceType) => {
     setServiceType(type);
@@ -79,31 +52,28 @@ export default function Apply() {
     setStep('info');
   };
 
-  const handleInfoSubmit = async (data: any) => {
+  const handleInfoSubmit = (data: any) => {
     setIsSubmitting(true);
-    const fullFormData = { ...formData, userInfo: data };
-    const referralCode = sessionStorage.getItem('referral_code');
-    
+    const id = 'GB-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    setInquiryId(id);
+
+    const submission = {
+      id,
+      serviceType,
+      ...formData,
+      userInfo: data,
+      createdAt: new Date().toISOString()
+    };
+
+    // Store in sessionStorage for the current browser session only
     try {
-      const consultationData = {
-        userId: user?.uid || 'anonymous',
-        serviceType,
-        status: 'received',
-        referredBy: referralCode || null,
-        createdAt: serverTimestamp(),
-        ...fullFormData
-      };
-      
-      const colRef = collection(db, 'consultations');
-      await addDoc(colRef, consultationData);
-      
+      sessionStorage.setItem('last_inquiry', JSON.stringify(submission));
+    } catch (e) {}
+
+    setTimeout(() => {
       setIsSubmitting(false);
       setStep('success');
-    } catch (err) {
-      console.error('Submission error:', err);
-      setIsSubmitting(false);
-      alert(t('common.error'));
-    }
+    }, 400);
   };
 
   const renderProgress = () => {
@@ -216,7 +186,7 @@ function ServiceSelection({ onSelect }: { onSelect: (type: ServiceType) => void 
         <button
           key={s.type}
           onClick={() => onSelect(s.type)}
-          className="flex items-center gap-6 p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-blue-500/50 hover:bg-blue-600/5 transition-all text-left group"
+          className="flex items-center gap-6 p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-blue-500/50 hover:bg-blue-600/5 transition-all text-left group cursor-pointer"
         >
           <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
             <s.icon size={24} />
@@ -364,7 +334,7 @@ function DetailedInput({ type, onBack, onSubmit }: { type: ServiceType, onBack: 
                     key={o.value}
                     onClick={() => setData({ ...data, [f.id]: o.value })}
                     className={cn(
-                      "flex flex-col items-center justify-center p-3 rounded-xl border text-sm gap-2 transition-all",
+                      "flex flex-col items-center justify-center p-3 rounded-xl border text-sm gap-2 transition-all cursor-pointer",
                       data[f.id] === o.value
                         ? "bg-blue-600/10 border-blue-600 text-blue-400"
                         : "bg-white/5 border-white/5 text-zinc-700 dark:text-zinc-500 hover:border-white/20"
@@ -398,13 +368,13 @@ function DetailedInput({ type, onBack, onSubmit }: { type: ServiceType, onBack: 
       <div className="flex items-center justify-between pt-8">
         <button 
           onClick={subStep === 0 ? onBack : () => setSubStep(s => s - 1)} 
-          className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-sm font-medium"
+          className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-sm font-medium cursor-pointer"
         >
           <ChevronLeft size={16} /> {subStep === 0 ? t('apply_page.btns.prev') : t('apply_page.btns.back')}
         </button>
         <button 
           onClick={handleNext}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-10 py-4 rounded-full font-bold flex items-center gap-3 transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)]"
+          className="bg-blue-600 hover:bg-blue-500 text-white px-10 py-4 rounded-full font-bold flex items-center gap-3 transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] cursor-pointer"
         >
           {isLastSubStep ? t('apply_page.btns.almost') : t('apply_page.btns.next')} <ArrowRight size={16} />
         </button>
@@ -468,9 +438,10 @@ function CustomerInfo({ onBack, onSubmit, isSubmitting }: { onBack: () => void, 
             ].map((m) => (
               <button
                 key={m.id}
+                type="button"
                 onClick={() => setData({ ...data, consultationMethod: m.id })}
                 className={cn(
-                  "p-4 rounded-xl border flex flex-col items-center gap-2 transition-all",
+                  "p-4 rounded-xl border flex flex-col items-center gap-2 transition-all cursor-pointer",
                   data.consultationMethod === m.id 
                     ? "bg-blue-600/10 border-blue-600 text-blue-400" 
                     : "bg-white/5 border-white/10 text-zinc-500 hover:border-white/20"
@@ -489,14 +460,14 @@ function CustomerInfo({ onBack, onSubmit, isSubmitting }: { onBack: () => void, 
       </div>
 
       <div className="flex items-center justify-between pt-8">
-        <button onClick={onBack} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-sm">
+        <button onClick={onBack} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-sm cursor-pointer">
           <ChevronLeft size={16} /> {t('apply_page.btns.prev')}
         </button>
         <button 
           onClick={() => onSubmit(data)}
           disabled={isSubmitting}
           className={cn(
-            "bg-blue-600 text-white px-12 py-4 rounded-full font-bold flex items-center gap-3 transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)]",
+            "bg-blue-600 text-white px-12 py-4 rounded-full font-bold flex items-center gap-3 transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] cursor-pointer",
             isSubmitting ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-500"
           )}
         >
@@ -509,6 +480,14 @@ function CustomerInfo({ onBack, onSubmit, isSubmitting }: { onBack: () => void, 
 
 function SuccessScreen({ id }: { id: string }) {
   const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+
+  const copyId = () => {
+    navigator.clipboard.writeText(id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
@@ -523,23 +502,30 @@ function SuccessScreen({ id }: { id: string }) {
         {t('apply_page.success_subtitle')}
       </p>
       
-      <div className="glass-panel p-6 rounded-2xl border-blue-500/30 bg-blue-600/5 inline-block mb-12">
-        <span className="text-xs font-mono text-blue-400 block mb-2 tracking-widest font-black uppercase">Inquiry ID</span>
-        <span className="text-2xl font-mono font-bold text-white tracking-widest">{id}</span>
+      <div className="glass-panel p-6 rounded-2xl border-blue-500/30 bg-blue-600/5 inline-block mb-8">
+        <span className="text-xs font-mono text-blue-400 block mb-2 tracking-widest font-black uppercase">Inquiry ID (접수 번호)</span>
+        <div className="flex items-center gap-3 justify-center">
+          <span className="text-2xl font-mono font-bold text-white tracking-widest">{id}</span>
+          <button 
+            onClick={copyId} 
+            className="p-1.5 rounded-lg bg-blue-500/20 text-blue-400 hover:text-white transition-colors cursor-pointer"
+            title="접수 번호 복사"
+          >
+            {copied ? <CheckCircle2 size={16} /> : <Copy size={16} />}
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row items-center justify-center gap-4">
         <a 
-          href="https://pf.kakao.com/_xxxx" 
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full md:w-auto bg-[#FEE500] text-black px-10 py-4 rounded-full font-bold flex items-center justify-center gap-3 hover:opacity-90 transition-opacity"
+          href={`mailto:contact@glob-nexis.com?subject=문의 접수 [${id}]`}
+          className="w-full md:w-auto bg-blue-600 text-white px-8 py-4 rounded-full font-bold flex items-center justify-center gap-2 hover:bg-blue-500 transition-all shadow-lg"
         >
-          <MessageCircle size={18} /> {t('apply_page.btns.kakao_chat')}
+          <Mail size={18} /> 이메일로 접수번호 전달
         </a>
         <button 
           onClick={() => window.location.href = '/'}
-          className="w-full md:w-auto glass-panel px-10 py-4 rounded-full font-bold border border-white/10 hover:bg-white/5"
+          className="w-full md:w-auto glass-panel px-8 py-4 rounded-full font-bold border border-white/10 hover:bg-white/5 cursor-pointer text-zinc-300"
         >
           {t('apply_page.btns.home')}
         </button>

@@ -1,106 +1,81 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import { 
   Users, 
   TrendingUp, 
-  Clock, 
   CheckCircle2, 
   Copy, 
-  ExternalLink,
-  Search,
-  Filter,
-  Share2
+  Share2,
+  DollarSign,
+  Shield,
+  ArrowRight
 } from 'lucide-react';
-import { 
-  collection, 
-  query, 
-  where, 
-  onSnapshot, 
-  orderBy 
-} from '../../lib/dbWrapper';
-import { db } from '../../lib/firebase';
-import { useAuth } from '../../components/common/AuthProvider';
+import { Link } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import { useTranslation } from 'react-i18next';
 
 export default function AgentDashboard() {
-  const { profile } = useAuth();
-  const { t, i18n } = useTranslation();
-  const [referrals, setReferrals] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (!profile?.referralCode) return;
-
-    // 내가 추천한(referredBy) 문의 내역만 필터링하여 가져옴
-    const q = query(
-      collection(db, 'consultations'),
-      where('referredBy', '==', profile.referralCode),
-      orderBy('createdAt', 'desc')
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setReferrals(data);
-      setLoading(false);
-    }, (error) => {
-      console.error("Error fetching referrals:", error);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [profile?.referralCode]);
-
-  const referralLink = profile ? `${window.location.origin}?ref=${profile.referralCode}` : '';
+  const sampleReferralLink = `${window.location.origin}?ref=NEXIS-PARTNER`;
 
   const copyLink = () => {
-    navigator.clipboard.writeText(referralLink);
+    navigator.clipboard.writeText(sampleReferralLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const stats = {
-    total: referrals.length,
-    pending: referrals.filter(r => r.status === 'received').length,
-    completed: referrals.filter(r => r.status === 'completed').length,
-    inProgress: referrals.filter(r => r.status === 'consulting').length
-  };
-
-  if (!profile) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center text-zinc-500 font-mono">
-        LOADING PROFILE...
-      </div>
-    );
-  }
+  const partnerBenefits = [
+    {
+      title: '업계 최고 수준 리워드',
+      desc: '의뢰 건당 확정 수수료 지급 및 정기 정산 프로세스 지원',
+      icon: DollarSign,
+      color: 'text-emerald-400'
+    },
+    {
+      title: '투명한 실시간 트래킹',
+      desc: '전담 어카운트 매니저 배정 및 진행 상태 핫라인 소통',
+      icon: TrendingUp,
+      color: 'text-blue-400'
+    },
+    {
+      title: '신뢰할 수 있는 물류 인프라',
+      desc: '광저우/웨이하이/오레곤 직영 물류센터 및 원스톱 통관',
+      icon: Shield,
+      color: 'text-purple-400'
+    },
+    {
+      title: '간편한 추천 링크 연동',
+      desc: '개별 고유 추천 코드를 통한 유입 및 전환 자동 트래킹',
+      icon: Share2,
+      color: 'text-cyan-400'
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-black text-white pt-32 pb-20">
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
           <div>
             <span className="text-blue-500 font-mono text-xs font-black tracking-widest uppercase mb-4 block">
-              // AGENT_DASHBOARD
+              // PARTNER_PROGRAM
             </span>
-            <h1 className="text-4xl md:text-5xl font-display font-bold">{t('agent.dashboard')}</h1>
-            <p className="text-zinc-400 mt-4 max-w-xl text-[14px] font-bold leading-[22px]">
-              {t('agent.desc')}
+            <h1 className="text-4xl md:text-6xl font-display font-bold">글로벌 파트너스 & 에이전트</h1>
+            <p className="text-zinc-400 mt-4 max-w-xl text-[15px] font-medium leading-relaxed">
+              글로벌 넥시스와 함께 성장할 무역, 이커머스, 소싱 전문 파트너를 모십니다. 
+              최첨단 물류 인프라와 구매 대행 서비스를 파트너 고객사에 매끄럽게 연결하세요.
             </p>
           </div>
- 
+
           <div className="glass-panel p-6 rounded-3xl border-white/10 w-full md:w-auto min-w-[350px]">
-            <p className="text-xs text-zinc-400 uppercase font-mono tracking-widest mb-3 font-bold">{t('agent.myPromoLink')}</p>
+            <p className="text-xs text-zinc-400 uppercase font-mono tracking-widest mb-3 font-bold">파트너 추천 코드 예시</p>
             <div className="flex items-center gap-3 bg-black/40 border border-white/5 p-2 rounded-xl">
-              <span className="text-xs font-mono text-zinc-400 truncate flex-grow pl-2">{referralLink}</span>
+              <span className="text-xs font-mono text-zinc-400 truncate flex-grow pl-2">{sampleReferralLink}</span>
               <button 
                 onClick={copyLink}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all",
+                  "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer",
                   copied ? "bg-green-500 text-white" : "bg-blue-600 text-white hover:bg-blue-500"
                 )}
               >
@@ -108,104 +83,43 @@ export default function AgentDashboard() {
                 {copied ? t('agent.copied') : t('agent.copy')}
               </button>
             </div>
-            <p className="text-[11px] text-zinc-400 mt-3 text-center font-medium">{t('agent.linkDesc')}</p>
+            <p className="text-[11px] text-zinc-400 mt-3 text-center font-medium">파트너 제휴 승인 시 맞춤 코드가 발급됩니다.</p>
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-          {[
-            { label: t('agent.stats.total'), value: stats.total, icon: TrendingUp, color: 'text-white' },
-            { label: t('agent.stats.pending'), value: stats.pending, icon: Clock, color: 'text-zinc-400' },
-            { label: t('agent.stats.inProgress'), value: stats.inProgress, icon: Share2, color: 'text-blue-400' },
-            { label: t('agent.stats.completed'), value: stats.completed, icon: CheckCircle2, color: 'text-green-500' }
-          ].map((stat, idx) => (
+        {/* Benefits Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+          {partnerBenefits.map((b, idx) => (
             <motion.div
               key={idx}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
-              className="glass-panel p-6 rounded-2xl border-white/5"
+              className="glass-panel p-8 rounded-2xl border-white/5 space-y-4 hover:border-white/20 transition-all"
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className={cn("p-2 rounded-lg bg-white/5", stat.color)}>
-                  <stat.icon size={18} />
-                </div>
+              <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center">
+                <b.icon size={22} className={b.color} />
               </div>
-              <p className="text-zinc-500 text-xs mb-1 font-bold">{stat.label}</p>
-              <p className="text-3xl font-display font-bold">{stat.value}<span className="text-sm ml-1 text-zinc-500">{t('agent.stats.unit')}</span></p>
+              <h3 className="font-bold text-lg text-white">{b.title}</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed font-medium">{b.desc}</p>
             </motion.div>
           ))}
         </div>
 
-        {/* Referrals Table */}
-        <div className="glass-panel rounded-3xl border-white/10 overflow-hidden">
-          <div className="p-6 border-b border-white/10 flex items-center justify-between">
-            <h2 className="font-bold flex items-center gap-2">
-              <Users size={18} className="text-blue-500" />
-              {t('agent.referralHistory')}
-            </h2>
+        {/* Join CTA */}
+        <div className="glass-panel p-10 md:p-14 rounded-3xl border-blue-500/20 bg-blue-600/5 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="space-y-3">
+            <h2 className="text-2xl md:text-3xl font-display font-bold text-white">파트너십 제휴 신청하기</h2>
+            <p className="text-zinc-400 text-sm max-w-lg leading-relaxed font-medium">
+              기업 고객, 셀러, 포워더 등 물류와 구매대행 시너지가 필요한 모든 비즈니스 파트너의 문의를 환영합니다.
+            </p>
           </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-white/5 bg-white/5">
-                  <th className="px-6 py-4 text-xs font-mono text-zinc-400 uppercase font-bold">{t('agent.table.date')}</th>
-                  <th className="px-6 py-4 text-xs font-mono text-zinc-400 uppercase font-bold">{t('agent.table.customer')}</th>
-                  <th className="px-6 py-4 text-xs font-mono text-zinc-400 uppercase font-bold">{t('agent.table.service')}</th>
-                  <th className="px-6 py-4 text-xs font-mono text-zinc-400 uppercase font-bold">{t('agent.table.status')}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {loading ? (
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <tr key={i}>
-                      <td colSpan={4} className="px-6 py-8 animate-pulse text-center text-zinc-700 text-xs">LOADING...</td>
-                    </tr>
-                  ))
-                ) : referrals.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-20 text-center text-zinc-600 text-sm">
-                      {t('agent.noData')}
-                    </td>
-                  </tr>
-                ) : (
-                  referrals.map((ref) => (
-                    <tr key={ref.id} className="hover:bg-white/5 transition-colors group">
-                      <td className="px-6 py-4">
-                        <span className="text-xs text-zinc-400">
-                          {ref.createdAt?.toDate().toLocaleDateString()}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="text-sm font-bold">{ref.userInfo.name}</p>
-                        <p className="text-[10px] text-zinc-500">{ref.userInfo.companyName || (i18n.language === 'ko' ? '개인' : 'Individual')}</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-[10px] bg-blue-500/10 text-blue-500 px-2 py-1 rounded inline-block font-mono uppercase">
-                          {ref.serviceType}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={cn(
-                          "text-[10px] font-bold px-2 py-1 rounded-full",
-                          ref.status === 'received' ? "bg-zinc-500/20 text-zinc-400" :
-                          ref.status === 'consulting' ? "bg-blue-500/20 text-blue-400" :
-                          ref.status === 'completed' ? "bg-green-500/20 text-green-500" :
-                          "bg-red-500/20 text-red-400"
-                        )}>
-                          {ref.status === 'received' ? t('agent.status.received') :
-                           ref.status === 'consulting' ? t('agent.status.consulting') :
-                           ref.status === 'completed' ? t('agent.status.completed') : t('agent.status.cancelled')}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <Link
+            to="/contact"
+            className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-full font-bold text-sm transition-all flex items-center gap-2 shrink-0 shadow-lg"
+          >
+            제휴 담당자에게 문의하기 <ArrowRight size={16} />
+          </Link>
         </div>
       </div>
     </div>

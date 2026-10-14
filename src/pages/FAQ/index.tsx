@@ -1,49 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Minus, Plane, Anchor, Clock, Percent, DollarSign, Globe, Info, Search } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, Minus, Globe, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTranslation } from 'react-i18next';
-import { db } from '../../lib/firebase';
-import { collection, query, onSnapshot } from '../../lib/dbWrapper';
 import { cn } from '../../lib/utils';
-
-interface Rate {
-  id: string;
-  country: string;
-  type: 'Air' | 'Sea';
-  freightRate: string;
-  proxyFee: string;
-  transitTime: string;
-  remarks?: string;
-}
+import { STATIC_RATES, StaticRate } from '../../data/staticRates';
 
 export default function FAQ() {
   const { t } = useTranslation();
-  const [rates, setRates] = useState<Rate[]>([]);
+  const rates = STATIC_RATES;
   const [searchTerm, setSearchTerm] = useState('');
   const faqs = t('faq_page.items', { returnObjects: true }) as Array<{ q: string, a: string }>;
 
-  useEffect(() => {
-    const q = query(collection(db, 'rates'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Rate[];
-      setRates(docs);
-    }, (error) => {
-      console.error("Failed to read rates for FAQ:", error);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  // Dynamically craft enriched answers with live rates database
+  // Dynamically craft enriched answers with static rates reference
   const getEnrichedAnswer = (question: string, defaultAnswer: string) => {
-    if (rates.length === 0) return defaultAnswer;
+    if (!rates || rates.length === 0) return defaultAnswer;
 
     // Shipping duration FAQ
     if (question.includes('배송 기간') || question.toLowerCase().includes('delivery') || question.toLowerCase().includes('shipping time')) {
-      const airRates = rates.filter(r => r.type === 'Air');
-      const seaRates = rates.filter(r => r.type === 'Sea');
-      
-      let enrichedText = defaultAnswer + "\n\n🌐 [실시간 국가별 고시 운송 소요 기한]\n";
+      let enrichedText = defaultAnswer + "\n\n🌐 [표준 국가별 공시 운송 소요 기한]\n";
       rates.forEach(r => {
         enrichedText += `• ${r.country} (${r.type === 'Air' ? '항공 Express' : '해상 Cargo'}): ${r.transitTime}\n`;
       });
@@ -52,7 +26,7 @@ export default function FAQ() {
 
     // Proxy fee FAQ
     if (question.includes('수수료') || question.toLowerCase().includes('fee') || question.toLowerCase().includes('commission')) {
-      let enrichedText = defaultAnswer + "\n\n📊 [실시간 고시 국가별 구매대행 요율]\n";
+      let enrichedText = defaultAnswer + "\n\n📊 [표준 공시 국가별 구매대행 요율]\n";
       rates.forEach(r => {
         enrichedText += `• ${r.country} 대행 기본수수료: ${r.proxyFee} (운송 편: ${r.type === 'Air' ? '항공' : '해상'})\n`;
       });
@@ -75,7 +49,7 @@ export default function FAQ() {
           {t('faq_page.title')}
         </h1>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">
-          자주 물으시는 질문과 실시간 공시기준 운임 정보를 원스톱으로 제공합니다.
+          자주 물으시는 질문과 표준 공시기준 운임 정보를 원스톱으로 제공합니다.
         </p>
       </div>
 
@@ -93,10 +67,10 @@ export default function FAQ() {
               </div>
               <div>
                 <h3 className="font-bold text-lg text-zinc-900 dark:text-white flex items-center gap-2">
-                  실시간 국가별 고지 요율 정보
+                  표준 국가별 공시 요율 정보
                 </h3>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-                  관리자 포털에서 직접 설정하고 고시한 최신 배송 운임과 구매 수수료율입니다.
+                  글로벌 넥시스의 최신 표준 배송 운임과 구매 수수료율 안내입니다.
                 </p>
               </div>
             </div>
@@ -208,4 +182,3 @@ function FAQItem({ question, answer }: FAQItemProps) {
     </div>
   );
 }
-

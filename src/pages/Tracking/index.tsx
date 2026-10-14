@@ -1,58 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
-import { Search, Package, MapPin, Clock, CheckCircle2, Truck, Ship, Globe, ChevronRight, List } from 'lucide-react';
-import { useAuth } from '../../components/common/AuthProvider';
-import { db } from '../../lib/firebase';
-import { collection, query, where, getDocs, limit } from '../../lib/dbWrapper';
+import { Search, Package, MapPin, Clock, CheckCircle2, Truck, Ship, Globe, AlertCircle, AlertTriangle, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
-import { auth } from '../../lib/firebase';
-
-enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
-
-interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: {
-    userId?: string | null;
-    email?: string | null;
-    emailVerified?: boolean | null;
-    isAnonymous?: boolean | null;
-    tenantId?: string | null;
-  }
-}
-
-function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
-    },
-    operationType,
-    path
-  }
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
-}
-
-interface TrackingEvent {
-  time: string;
-  location: string;
-  status: string;
-  desc: string;
-}
+import { Link } from 'react-router-dom';
 
 const STEPS = [
   { id: 'ordered', icon: Package },
@@ -65,132 +16,91 @@ const STEPS = [
   { id: 'delivered', icon: CheckCircle2 }
 ];
 
+interface DemoShipmentData {
+  status: string;
+  location: string;
+  desc: string;
+}
+
+const DEMO_PRESETS: Record<string, DemoShipmentData> = {
+  'GN-2024-001': {
+    status: 'import',
+    location: '인천항 (Incheon Port)',
+    desc: '인천항 해관 수입 통관 심사 진행 중'
+  },
+  'GN-2024-005': {
+    status: 'warehouse',
+    location: '중국 웨이하이 물류창고 (Weihai, China)',
+    desc: '중국 웨이하이 물류센터 실사 및 입고 완료'
+  },
+  'DEMO-12345': {
+    status: 'shipping',
+    location: '국제 정기 화물선 (In Transit)',
+    desc: '수출 통관 후 한국행 정기 선적 운송 중'
+  },
+  '12345678': {
+    status: 'delivered',
+    location: '서울시 송파구 배송지 (Destination Reached)',
+    desc: '고객님께 화물 인계 및 배송이 최종 완료되었습니다.'
+  }
+};
+
 export default function TrackingPage() {
   const { t, i18n } = useTranslation();
-  const { profile } = useAuth();
   const [trackingNumber, setTrackingNumber] = useState('');
   const [result, setResult] = useState<any>(null);
+  const [notFound, setNotFound] = useState(false);
+  const [searchedNumber, setSearchedNumber] = useState('');
   const [loading, setLoading] = useState(false);
-  const [myShipments, setMyShipments] = useState<any[]>([]);
 
-  useEffect(() => {
-    if (!profile) return;
-    
-    // In a real app, you'd filter by user ID. 
-    // Here we'll search by customer name matching the profile name or email temporarily
-    const fetchMyShipments = async () => {
-      try {
-        const q = query(
-          collection(db, 'shipments'), 
-          where('customerName', '>=', profile.displayName || profile.email),
-          limit(5)
-        );
-        const snapshot = await getDocs(q);
-        const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
-        setMyShipments(docs.map(d => ({
-          number: d.trackingNumber,
-          status: d.currentStep,
-          lastUpdate: d.updatedAt?.toDate ? format(d.updatedAt.toDate(), 'yyyy-MM-dd HH:mm') : 'Recently'
-        })));
-      } catch (err) {
-        handleFirestoreError(err, OperationType.LIST, 'shipments');
-      }
-    };
-    fetchMyShipments();
-  }, [profile]);
+  const sampleNumbers = [
+    { number: 'GN-2024-001', label: '인천항 통관 진행' },
+    { number: 'GN-2024-005', label: '웨이하이 창고 입고' },
+    { number: 'DEMO-12345', label: '해상 운송 진행' },
+    { number: '12345678', label: '배송 완료' }
+  ];
 
-  const handleSearch = async (e?: React.FormEvent, manualNumber?: string) => {
+  const handleSearch = (e?: React.FormEvent, manualNumber?: string) => {
     if (e) e.preventDefault();
-    const num = manualNumber || trackingNumber;
-    if (!num.trim()) return;
+    const num = (manualNumber || trackingNumber).trim();
+    if (!num) return;
 
     setLoading(true);
     setTrackingNumber(num);
-    
-    try {
-      const q = query(collection(db, 'shipments'), where('trackingNumber', '==', num), limit(1));
-      const snapshot = await getDocs(q);
-      
-      if (!snapshot.empty) {
-        const docSnap = snapshot.docs[0];
-        const data = docSnap.data();
-        const updatedAt = data.updatedAt?.toDate ? format(data.updatedAt.toDate(), 'yyyy-MM-dd HH:mm:ss') : 'Recently';
-        
-        let events = [];
-        if (data.history && Array.isArray(data.history)) {
-          // Use real history stored in DB
-          events = [...data.history].reverse().map((h: any) => ({
-            time: h.time?.toDate ? format(h.time.toDate(), 'yyyy-MM-dd HH:mm:ss') : h.time,
-            location: h.location || 'Logistics Center',
-            status: h.status,
-            desc: h.desc || t(`agent.tracking.statusLabels.${h.status}`)
-          }));
-        } else {
-          // Fallback: Generate history based on current step
-          const currentIdx = STEPS.findIndex(s => s.id === data.currentStep);
-          events = STEPS.slice(0, currentIdx + 1).reverse().map((step, i) => ({
-            time: i === 0 ? updatedAt : format(new Date(Date.now() - (i * 1.5) * 86400000), 'yyyy-MM-dd HH:mm:ss'),
-            location: 'System Hub',
-            status: step.id,
-            desc: t(`agent.tracking.statusLabels.${step.id}`)
-          }));
-        }
+    setSearchedNumber(num);
+    setResult(null);
+    setNotFound(false);
 
-        setResult({
-          number: num,
-          currentStep: data.currentStep,
-          lastUpdate: updatedAt,
-          events: events
-        });
-      } else if (num.startsWith('DEMO-') || num === '12345678' || num === 'GN-2024-001' || num === 'GN-2024-005') {
-        // DEMO MOCK DATA FALLBACK
-        let demoStatus = 'shipping';
-        let demoLocation = 'Region Distribution Center';
-        let customDesc = '';
+    setTimeout(() => {
+      const preset = DEMO_PRESETS[num.toUpperCase()] || DEMO_PRESETS[num];
 
-        if (num === 'GN-2024-001') {
-          demoStatus = 'import';
-          demoLocation = '인천항 (Incheon Port)';
-          customDesc = i18n.language === 'ko' ? '인천항 통관 진행 중' : 'Customs clearance at Incheon Port';
-        } else if (num === 'GN-2024-005') {
-          demoStatus = 'warehouse';
-          demoLocation = '중국 웨이하이 창고 (Weihai, China)';
-          customDesc = i18n.language === 'ko' ? '중국 웨이하이 창고 입고 완료' : 'Stored in Weihai, China Warehouse';
-        } else if (num === '12345678' || num.includes('COMPLETE')) {
-          demoStatus = 'delivered';
-          demoLocation = i18n.language === 'ko' ? '배송지 도착' : 'Destination Reached';
-          customDesc = i18n.language === 'ko' ? '고객님께 배송이 완료되었습니다.' : 'Delivery has been completed.';
-        }
-
-        const demoTime = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
-        
-        const currentIdx = STEPS.findIndex(s => s.id === demoStatus);
+      if (preset) {
+        const demoTime = format(new Date(), 'yyyy-MM-dd HH:mm');
+        const currentIdx = STEPS.findIndex(s => s.id === preset.status);
         const events = STEPS.slice(0, currentIdx + 1).reverse().map((step, i) => {
           const isLatest = i === 0;
           return {
-            time: format(new Date(Date.now() - (i * 2) * 86400000), 'yyyy-MM-dd HH:mm:ss'),
-            location: isLatest ? demoLocation : 'System Hub',
+            time: format(new Date(Date.now() - (i * 2) * 86400000), 'yyyy-MM-dd HH:mm'),
+            location: isLatest ? preset.location : 'Global Transit Hub',
             status: step.id,
-            desc: isLatest && customDesc ? customDesc : `[TEST] ${t(`agent.tracking.statusLabels.${step.id}`)}`
+            desc: isLatest ? preset.desc : t(`agent.tracking.statusLabels.${step.id}`)
           };
         });
 
         setResult({
           number: num,
-          currentStep: demoStatus,
+          currentStep: preset.status,
           lastUpdate: demoTime,
           events: events
         });
+        setNotFound(false);
       } else {
+        // Not a demo preset: strictly show not found notice to prevent false shipment misunderstandings
         setResult(null);
-        alert('Tracking number not found. Try "DEMO-12345" for testing.');
+        setNotFound(true);
       }
-    } catch (err) {
-      handleFirestoreError(err, OperationType.LIST, 'shipments');
-    } finally {
       setLoading(false);
-      window.scrollTo({ top: 300, behavior: 'smooth' });
-    }
+    }, 250);
   };
 
   const currentStepIndex = STEPS.findIndex(s => s.id === result?.currentStep);
@@ -206,8 +116,12 @@ export default function TrackingPage() {
             <span className="text-blue-500 font-mono text-xs font-black tracking-widest uppercase mb-4 block">
               // LOGISTICS_TRACKING
             </span>
-            <h1 className="text-4xl md:text-7xl font-display font-extrabold mb-6 tracking-tighter text-zinc-900 dark:text-white uppercase italic">{t('agent.tracking.title')}</h1>
-            <p className="text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto text-lg font-medium">{t('agent.tracking.desc')}</p>
+            <h1 className="text-4xl md:text-7xl font-display font-extrabold mb-6 tracking-tighter text-zinc-900 dark:text-white uppercase italic">
+              {t('agent.tracking.title')}
+            </h1>
+            <p className="text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto text-lg font-medium">
+              {t('agent.tracking.desc')}
+            </p>
           </motion.div>
         </div>
 
@@ -216,7 +130,7 @@ export default function TrackingPage() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1 }}
-          className="relative mb-12"
+          className="relative mb-6"
         >
           <div className="glass-panel p-2 rounded-2xl border-black/5 dark:border-white/10 flex items-center gap-4 bg-black/5 dark:bg-white/5 pr-4">
             <div className="flex-grow flex items-center pl-4 gap-3">
@@ -225,14 +139,14 @@ export default function TrackingPage() {
                 type="text" 
                 value={trackingNumber}
                 onChange={(e) => setTrackingNumber(e.target.value)}
-                placeholder={t('agent.tracking.inputPlaceholder')}
-                className="w-full bg-transparent border-none text-zinc-900 dark:text-white focus:ring-0 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 font-bold py-3"
+                placeholder={t('agent.tracking.inputPlaceholder') || '운송장 번호를 입력하세요 (예: GN-2024-001)'}
+                className="w-full bg-transparent border-none text-zinc-900 dark:text-white focus:ring-0 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 font-bold py-3 outline-none"
               />
             </div>
             <button 
               type="submit"
               disabled={loading}
-              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-black text-sm hover:bg-blue-500 transition-all disabled:opacity-50"
+              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-black text-sm hover:bg-blue-500 transition-all disabled:opacity-50 cursor-pointer"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -241,56 +155,72 @@ export default function TrackingPage() {
           </div>
         </motion.form>
 
-        {profile && myShipments.length > 0 && (
+        {/* Quick sample chips */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
+          <span className="text-xs text-zinc-500 font-medium mr-1">데모 시뮬레이션 번호:</span>
+          {sampleNumbers.map((s) => (
+            <button
+              key={s.number}
+              type="button"
+              onClick={() => handleSearch(undefined, s.number)}
+              className="text-xs px-3 py-1.5 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-blue-600/10 hover:border-blue-500/30 border border-black/5 dark:border-white/10 font-mono text-zinc-700 dark:text-zinc-300 transition-colors cursor-pointer"
+            >
+              {s.number} ({s.label})
+            </button>
+          ))}
+        </div>
+
+        {/* Not Found State */}
+        {notFound && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mb-12"
+            className="glass-panel p-10 rounded-3xl border-white/10 text-center space-y-4 mb-8"
           >
-            <div className="flex items-center gap-3 mb-6">
-              <List size={20} className="text-blue-500" />
-              <h2 className="text-xl font-bold">{t('agent.tracking.myShipments')}</h2>
+            <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto">
+              <AlertCircle size={28} />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {myShipments.map((shipment) => (
-                <button
-                  key={shipment.number}
-                  onClick={() => handleSearch(undefined, shipment.number)}
-                  className="glass-panel p-5 rounded-2xl border-black/5 dark:border-white/5 bg-black/5 dark:bg-white/5 hover:border-blue-500/30 transition-all text-left group"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="text-[10px] font-mono text-zinc-700 dark:text-zinc-500 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded">
-                      {shipment.number}
-                    </span>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
-                      shipment.status === 'delivered' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-blue-500/10 text-blue-500'
-                    }`}>
-                      {t(`agent.tracking.statusLabels.${shipment.status}`)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-zinc-400">
-                      <Clock size={12} />
-                      <span className="text-[10px]">{shipment.lastUpdate}</span>
-                    </div>
-                    <div className="text-blue-500 text-[10px] font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                      {t('agent.tracking.viewDetails')}
-                      <ChevronRight size={12} />
-                    </div>
-                  </div>
-                </button>
-              ))}
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-zinc-900 dark:text-white">조회 가능한 배송정보가 없습니다</h3>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
+                입력하신 운송장 번호 <span className="font-mono font-bold text-zinc-900 dark:text-white">[{searchedNumber}]</span>에 해당하는 화물 정보가 조회되지 않습니다.
+              </p>
+              <p className="text-xs text-zinc-400 dark:text-zinc-500 leading-relaxed">
+                운송장 번호를 다시 확인하시거나, 배송 대행 담당자 또는 고객센터로 문의해 주시기 바랍니다.
+              </p>
+            </div>
+            <div className="pt-2 flex justify-center gap-4">
+              <Link
+                to="/contact"
+                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-6 py-3 rounded-full transition-all shadow-md"
+              >
+                배송 문의하기 <ArrowRight size={14} />
+              </Link>
             </div>
           </motion.div>
         )}
 
+        {/* Demo Result */}
         {result && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="space-y-8"
           >
+            {/* Prominent Multi-language Simulation Disclaimer Banner */}
+            <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/25 space-y-2">
+              <div className="flex items-center gap-2.5 text-amber-600 dark:text-amber-400 font-bold text-sm">
+                <AlertTriangle size={18} className="shrink-0" />
+                <span>[시뮬레이션 데모 안내 / Simulation Notice]</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-zinc-700 dark:text-zinc-300 font-medium pl-7 leading-relaxed">
+                <div>🇰🇷 본 화면은 실제 배송정보가 아닌 시뮬레이션 안내입니다.</div>
+                <div>🇺🇸 This is a demonstration simulation, not actual shipment data.</div>
+                <div>🇨🇳 本界面为模拟演示，非真实物流信息。</div>
+                <div>🇯🇵 本画面は実際の配送情報ではなく、シミュレーション案内です。</div>
+              </div>
+            </div>
+
             {/* Status Stepper */}
             <div className="glass-panel p-8 rounded-3xl border-white/10">
               <div className="flex justify-between items-center mb-10 overflow-x-auto pb-4">
@@ -306,7 +236,7 @@ export default function TrackingPage() {
                         <div className="absolute top-5 left-[calc(50%+20px)] w-[calc(100%-40px)] h-0.5 bg-zinc-800">
                           <motion.div 
                             initial={{ width: 0 }}
-                            animate={{ width: idx < currentStepIndex ? '100%' : idx === currentStepIndex ? '0%' : '0%' }}
+                            animate={{ width: idx < currentStepIndex ? '100%' : '0%' }}
                             className="h-full bg-blue-500"
                           />
                         </div>
@@ -333,12 +263,12 @@ export default function TrackingPage() {
                   <p className="font-bold text-zinc-900 dark:text-white uppercase">{t(`agent.tracking.statusLabels.${result.currentStep}`)}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] text-zinc-700 dark:text-zinc-300 uppercase font-bold font-mono mb-1">Tracking Number</p>
+                  <p className="text-[11px] text-zinc-700 dark:text-zinc-300 uppercase font-bold font-mono mb-1">Demo Tracking #</p>
                   <p className="font-bold text-zinc-900 dark:text-white font-mono">{result.number}</p>
                 </div>
                 <div className="col-span-2">
                   <p className="text-[11px] text-zinc-700 dark:text-zinc-300 uppercase font-bold font-mono mb-1">{t('agent.tracking.lastUpdate')}</p>
-                  <p className="font-bold text-zinc-900 dark:text-white">{result.lastUpdate}</p>
+                  <p className="font-bold text-zinc-900 dark:text-white">{result.lastUpdate} (Simulation)</p>
                 </div>
               </div>
             </div>
@@ -350,6 +280,9 @@ export default function TrackingPage() {
                   <Clock size={18} className="text-blue-500" />
                   {t('agent.tracking.details')}
                 </h2>
+                <span className="text-[10px] font-mono uppercase bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded font-bold">
+                  Demo Simulation
+                </span>
               </div>
               <div className="p-8">
                 <div className="space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-black/5 dark:before:bg-white/10">
@@ -367,7 +300,7 @@ export default function TrackingPage() {
                           <p className={`font-bold ${i === 0 ? 'text-zinc-900 dark:text-white' : 'text-zinc-700 dark:text-zinc-400'}`}>
                             {t(`agent.tracking.statusLabels.${event.status}`)}
                           </p>
-                          <span className="text-[10px] font-mono text-zinc-500 dark:text-zinc-500">{event.time}</span>
+                          <span className="text-[10px] font-mono text-zinc-500">{event.time}</span>
                         </div>
                         <p className="text-zinc-600 dark:text-zinc-300 text-base mb-1 font-medium">{event.desc}</p>
                         <div className="flex items-center gap-1 text-[10px] text-blue-500/70 font-mono">
