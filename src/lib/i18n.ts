@@ -84,6 +84,10 @@ const resources = {
         card4Title: '데이터 기반 신뢰',
         card4Desc: '전 과정 디지털 모니터링 시스템을 통해 불투명한 물류 시장에서 가장 정직하고 투명한 데이터를 제공합니다.'
       },
+      business: {
+        title: '사업자 정보', operator: '운영사업자', representative: '대표자',
+        registrationNumber: '사업자등록번호', address: '사업장 주소', phone: '전화',
+      },
       footer: {
         links: 'Links',
         contact: 'Contact',
@@ -96,7 +100,7 @@ const resources = {
         privacy: '개인정보처리방침',
         terms: '이용약관',
         inquiry: '문의하기',
-        address: '서울특별시 강남구 테헤란로'
+        address: '경기도 고양시 덕양구 무원로 24, 402호 9호(행신동, 골드프라자)'
       },
       agent: {
         dashboard: '나의 레퍼럴 관리',
@@ -403,6 +407,10 @@ const resources = {
         card4Title: 'Data-based Trust',
         card4Desc: 'We provide the most honest and transparent data in the opaque logistics market through an all-stage digital monitoring system.'
       },
+      business: {
+        title: 'Business information', operator: 'Operator', representative: 'Representative',
+        registrationNumber: 'Business registration number', address: 'Business address', phone: 'Phone',
+      },
       footer: {
         links: 'Links',
         contact: 'Contact',
@@ -415,7 +423,7 @@ const resources = {
         privacy: 'Privacy Policy',
         terms: 'Terms of Service',
         inquiry: 'Inquiry',
-        address: 'Teheran-ro, Gangnam-gu, Seoul'
+        address: 'Room 402, Unit 9, 24 Muwon-ro, Deogyang-gu, Goyang-si, Gyeonggi-do, Republic of Korea (Haengsin-dong, Gold Plaza)'
       },
       agent: {
         dashboard: 'Referral Dashboard',
@@ -722,6 +730,10 @@ const resources = {
         card4Title: '基于数据的信任',
         card4Desc: '通过全阶段数字监控系统，我们在不透明的物流市场中提供最诚实、最透明的数据。'
       },
+      business: {
+        title: '经营者信息', operator: '经营者', representative: '代表人',
+        registrationNumber: '营业登记号码', address: '营业地址', phone: '电话',
+      },
       footer: {
         links: '链接',
         contact: '联系方式',
@@ -734,7 +746,7 @@ const resources = {
         privacy: '隐私政策',
         terms: '服务条款',
         inquiry: '咨询建议',
-        address: '首尔特别市江南区德黑兰路'
+        address: '韩国京畿道高阳市德阳区Muwon-ro 24，402室9号（幸信洞，Gold Plaza）'
       },
       agent: {
         dashboard: '我的推介管理',
@@ -991,6 +1003,10 @@ const resources = {
         card4Title: 'データに基づく信頼',
         card4Desc: '全過程のデジタルモニタリングシステムを通じて、不透明な物流市場において最も誠実で透明なデータを提供します。'
       },
+      business: {
+        title: '事業者情報', operator: '運営事業者', representative: '代表者',
+        registrationNumber: '事業者登録番号', address: '事業所所在地', phone: '電話',
+      },
       footer: {
         links: 'リンク',
         contact: 'お問い合わせ',
@@ -1003,7 +1019,7 @@ const resources = {
         privacy: 'プライバシーポリシー',
         terms: '利用規約',
         inquiry: 'お問い合わせ',
-        address: 'ソウル特別市江南区テヘラン路'
+        address: '韓国 京畿道 高陽市 徳陽区 Muwon-ro 24、402号室9号（幸信洞、Gold Plaza）'
       },
       agent: {
         dashboard: 'マイリファラル管理',

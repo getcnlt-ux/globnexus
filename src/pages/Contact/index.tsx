@@ -1,3 +1,5 @@
+import BusinessInfo from '../../components/common/BusinessInfo';
+import { business } from '../../lib/business';
 import { useTranslation } from 'react-i18next';
 import { Mail, Phone, MapPin, Clock } from 'lucide-react';
 
@@ -10,6 +12,8 @@ export default function Contact() {
       <p className="text-zinc-500 text-lg mb-16 px-4 max-w-2xl mx-auto">
         {t('contact_page.subtitle')}
       </p>
+
+      <div className="mb-12 glass-panel p-6 rounded-2xl"><BusinessInfo /></div>
 
       {/* Direct Contact Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 text-left">
@@ -25,14 +29,14 @@ export default function Contact() {
         </a>
 
         <a 
-          href="tel:+821027461240" 
+          href={business.phoneHref}
           className="glass-panel p-6 rounded-2xl border border-white/5 hover:border-blue-500/30 transition-all group block"
         >
           <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 mb-4 group-hover:scale-110 transition-transform">
             <Phone className="w-5 h-5" />
           </div>
           <span className="text-xs font-mono text-zinc-500 uppercase tracking-widest block mb-1">Phone</span>
-          <p className="font-bold text-zinc-900 dark:text-white text-base">+82 (0)10-2746-1240</p>
+          <p className="font-bold text-zinc-900 dark:text-white text-base">{business.phone}</p>
         </a>
 
         <div className="glass-panel p-6 rounded-2xl border border-white/5">
