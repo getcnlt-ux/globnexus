@@ -1,3 +1,5 @@
+import BusinessInfo from '../common/BusinessInfo';
+import { business } from '../../lib/business';
 import { Link } from 'react-router-dom';
 import { Plane, Mail, Phone, MapPin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -46,13 +48,14 @@ export default function Footer() {
             </li>
             <li className="flex items-center gap-3">
               <Phone className="w-4 h-4 text-blue-500" />
-              <a href="tel:+821027461240" className="hover:text-blue-500 transition-colors">+82 (0)10-2746-1240</a>
+              <a href={business.phoneHref}className="hover:text-blue-500 transition-colors">{business.phone}</a>
             </li>
-            <li className="flex items-center gap-3"><MapPin className="w-4 h-4 text-blue-500" /> {t('footer.address')}</li>
+            <li className="flex items-center gap-3"><MapPin className="w-4 h-4 shrink-0 text-blue-500" aria-hidden="true" /> {t('footer.address')}</li>
           </ul>
         </div>
       </div>
       
+      <div className="max-w-7xl mx-auto px-6 mt-12"><BusinessInfo /></div>
       <div className="max-w-7xl mx-auto px-6 mt-20 pt-10 border-t border-black/5 dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-zinc-500 dark:text-zinc-600">
         <p>© 2026 Global Nexis. All rights reserved.</p>
         <div className="flex gap-8">

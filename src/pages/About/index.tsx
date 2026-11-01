@@ -1,3 +1,4 @@
+import BusinessInfo from '../../components/common/BusinessInfo';
 import React from 'react';
 import { motion } from 'motion/react';
 import { Globe, Shield, Target, TrendingUp, Users, Zap, Award, Factory } from 'lucide-react';
@@ -51,6 +52,7 @@ export default function About() {
               <p>
                 {t('about.intro2')}
               </p>
+              <BusinessInfo />
             </div>
           </motion.div>
 
